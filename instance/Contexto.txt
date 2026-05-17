@@ -1,0 +1,248 @@
+Estou desenvolvendo um SaaS Flask chamado SabMec, para oficina mecânica. O projeto usa Flask, Flask-SQLAlchemy, Flask-WTF, Bootstrap e SQLite em desenvolvimento. Quero que você continue seguindo o mesmo padrão visual e técnico que já criamos.
+
+Estrutura geral:
+- Blueprint de pessoas: endpoint base `pessoas`
+- Blueprint de itens: endpoint base `itens`
+- Blueprint de veículos: endpoint base `veiculos`
+- Blueprint de OS: endpoint base `os`
+- Templates em `cadastros/` e `comercial/`
+- Base visual com `bases/base.html`, sidebar e componentes Bootstrap escuros.
+- CSS já tem classes como:
+  - `form-card`
+  - `card-header-custom`
+  - `form-label-custom`
+  - `form-control-sabmec`
+  - `card-linha`
+  - `btn-flutuante`
+  - `grade-navbar`
+  - `form-control-custom`
+- Usar HTML/Jinja seguindo os padrões já existentes.
+- Sempre usar `novalidate` nos forms quando necessário para evitar validação nativa do navegador atrapalhar abas/campos escondidos.
+- Quando houver múltiplos forms WTForms na mesma tela, apenas o form principal deve ter CSRF. Os auxiliares devem herdar `FormSemCsrf`.
+
+Coisas já implementadas:
+1. Pessoas
+- Models de Pessoa, PessoaContato, PessoaEndereco, PessoaCliente, PessoaFornecedor, PessoaUsuario, PessoaFilial.
+- `Pessoa` tem flags:
+  - `eh_cliente`
+  - `eh_fornecedor`
+  - `eh_usuario`
+  - `ativo`
+- Pessoa pode ter vários contatos e vários endereços.
+- Cadastro novo salva Pessoa e, condicionalmente, contato/endereço/cliente/fornecedor/usuário.
+- Contato/endereço são opcionais, mas se preencher algum campo do bloco, os campos essenciais passam a ser obrigatórios.
+- Edição de pessoa:
+  - Dados principais em abas.
+  - Contatos: adicionar/listar/editar/excluir/definir principal.
+  - Endereços: adicionar/listar/editar/excluir/definir principal.
+- Exclusão de pessoa:
+  - Se houver vínculos externos em outras tabelas com FK para `pessoas`, não exclui; apenas inativa.
+  - Tabelas internas de pessoa não bloqueiam exclusão.
+- Listagem de pessoas:
+  - Filtro por busca, tipo pessoa e status.
+  - Ao abrir a tela diretamente, não lista nada.
+  - Ao clicar buscar vazio/Enter vazio, lista tudo usando hidden `pesquisar=1` na navbar.
+  - Ordenar por `Pessoa.id.asc()`.
+
+2. Itens
+- Models:
+  - `Item`
+  - `ItemMercadoria`
+  - `ItemServico`
+- `Item` tem:
+  - `nome`
+  - `preco`
+  - `tipo`: `"Produto"` ou `"Servico"`
+  - `ativo`
+- Produto tem:
+  - `custo`
+  - `estoque`
+- Serviço não tem custo/estoque.
+- Forms:
+  - `FormItem`
+  - `FormItemProduto`
+  - `FormItemServico`
+- Cadastro novo e edição:
+  - Usa tipo para mostrar bloco de Produto ou Serviço.
+  - Campos monetários renderizados como `type="text"` e `inputmode="decimal"` para evitar setinhas.
+  - Se mudar de Produto para Serviço, remove mercadoria e cria serviço, e vice-versa.
+- Exclusão:
+  - Se tiver vínculo externo com FK para `itens`, inativa.
+  - Tabelas internas `itens_mercadoria` e `itens_servico` não bloqueiam.
+- Listagem de itens:
+  - Filtros por busca, tipo_item, status.
+  - Inicialmente não lista sem `pesquisar=1`.
+  - Ordenar por `Item.id.asc()`.
+
+3. Veículos
+- Model criado:
+  - `Veiculo`
+  - FK para `Pessoa` via `pessoa_id`
+  - campos:
+    - `placa`
+    - `marca`
+    - `modelo`
+    - `ano_fabricacao`
+    - `ano_modelo`
+    - `cor`
+    - `chassi`
+    - `renavam`
+    - `observacao`
+    - `ativo`
+- `Pessoa` tem relationship `veiculos`.
+- Importar `Veiculo` antes das rotas para evitar erro de mapper.
+- Form:
+  - `FormVeiculo`
+- Cadastro novo:
+  - proprietário é `pessoa_id`, carregando pessoas ativas e clientes.
+- Edição de veículo.
+- Exclusão:
+  - se houver vínculos externos com FK para `veiculos`, inativa.
+- Listagem:
+  - filtros por busca, status e tipo_busca: código, placa, modelo, proprietário.
+  - Inicialmente não lista sem `pesquisar=1`.
+  - Ordenar por `Veiculo.id.asc()`.
+
+4. Navbar de filtros
+- `bars/navbar.html` tem hidden:
+  - `<input type="hidden" name="pesquisar" value="1">`
+- Suporta:
+  - `tipo_pessoa`
+  - `tipo_item`
+  - `tipo_veiculo`
+- Pessoas:
+  - status
+  - tipo pessoa
+  - buscar por código/nome/cpf
+- Itens:
+  - status
+  - tipo item
+  - buscar por código/nome
+- Veículos:
+  - status
+  - buscar por código/placa/modelo/proprietário
+
+5. Sidebar
+- Temos sidebar escura com menus:
+  - Home
+  - Dashboard
+  - Cadastros com submenu Pessoas, Itens, Veículos e Condição de Pagamento
+  - Comercial com Ordens de Serviço
+  - Financeiro ficou inicialmente separado, mas depois Condição de Pagamento foi movida para Cadastros.
+- Evitar usar endpoint ainda inexistente; se ainda não existir, usar `href="#"` temporariamente.
+
+6. Condição de pagamento
+- Models planejados:
+  - `CondicaoPagamento`
+  - `CondicaoPagamentoParcela`
+- Model sugerido:
+  - `CondicaoPagamento`: `id`, `nome`, `descricao`, `ativo`
+  - `CondicaoPagamentoParcela`: `id`, `condicao_id`, `numero`, `dias`, `percentual`
+- Deve permitir:
+  - à vista: 1 parcela, dias 0, percentual 100
+  - parcelado: várias parcelas com dias e percentuais.
+
+7. Ordem de Serviço
+- Models atuais:
+  - `OrdemServico`
+  - `OrdemServicoItem`
+  - `OrdemServicoPagamento`
+  - `OrdemServicoParcela`
+- Não usar `OrdemServicoFiscal` por enquanto.
+- `OrdemServico`:
+  - `cliente_id`
+  - `veiculo_id`
+  - `data_abertura`
+  - `data_previsao`
+  - `data_fechamento`
+  - `status_id`
+  - `km`
+  - `relato_cliente`
+  - `diagnostico`
+  - `observacao`
+  - `subtotal_produtos`
+  - `subtotal_servicos`
+  - `desconto`
+  - `acrescimo`
+  - `total`
+- `status = db.relationship("Status")`, sem `back_populates`, porque o model `Status` atual não tem `ordens_servico`.
+- O model de OS tem `CheckConstraint`:
+  - total > 0
+  - subtotal/desconto/acréscimo não negativos
+  - item quantidade/valor_unitário/total > 0
+- Tem índices para cliente, veículo, status e datas.
+- Importante: regra “não salvar OS sem itens” deve ficar na rota, não só no banco.
+
+8. Forms de OS
+- Arquivo `sabmec/forms/os_forms.py`
+- Forms:
+  - `FormOrdemServico`
+  - `FormOrdemServicoItem`
+  - `FormOrdemServicoPagamento`
+  - `FormOrdemServicoParcela`
+- `FormOrdemServico` tem CSRF.
+- Auxiliares herdam `FormSemCsrf`.
+- Campos:
+  - OS: cliente_id, veiculo_id, status_id, data_previsao, km, relato_cliente, diagnostico, observacao, desconto, acrescimo.
+  - Item: item_id, tipo, descricao, quantidade, valor_unitario, desconto.
+  - Pagamento: condicao_pagamento_id.
+  - Parcela: numero, vencimento, valor.
+
+9. OS nova
+- Rota `os_novo.py` usa `session` para guardar itens temporários até salvar OS.
+- Chave de session: `"os_novo_itens"`.
+- A OS só grava no banco ao clicar em `salvar_os`.
+- Não pode gravar OS sem itens.
+- Não pode gravar OS com total <= 0.
+- Não pode adicionar item com quantidade <= 0, valor_unitario <= 0, desconto negativo ou total <= 0.
+- Rotas AJAX:
+  - `/os/buscar-clientes`
+  - `/os/buscar-itens`
+  - `/os/veiculos-por-cliente/<int:cliente_id>`
+- O cliente e o item NÃO devem carregar todos em selects.
+- No frontend, cliente e item são campos de texto com hidden id.
+- Ao clicar na lupa ou pressionar Enter, abre um modal de consulta.
+- Modal de clientes tem filtros:
+  - Nome
+  - Código
+  - CPF/CNPJ
+- Modal de itens tem filtros:
+  - Nome
+  - Código
+- Ao selecionar cliente:
+  - preenche `cliente_id`
+  - preenche input com `#id - nome (documento)`
+  - carrega veículos do cliente.
+- Ao selecionar item:
+  - preenche `item_id`
+  - preenche tipo, descrição, valor unitário, quantidade=1, desconto_item=0.
+- Houve bug de desconto duplicado porque desconto do item e desconto da OS tinham o mesmo `name="desconto"`.
+- Corrigido usando:
+  - desconto do item: `name="desconto_item"`
+  - desconto OS: `name="desconto_os"`
+  - acréscimo OS: `name="acrescimo_os"`
+- A tela de OS usa abas:
+  - Dados da OS
+  - Produtos e Serviços
+  - Pagamento
+- Para não voltar para a primeira aba após adicionar/remover item:
+  - hidden `aba_ativa`
+  - `renderizar_os_novo` passa `aba_ativa`
+  - botões de adicionar/remover item setam `aba_ativa='itens'`
+  - botão salvar OS pode setar `aba_ativa='pagamento'`
+  - classes das tabs usam `aba_ativa`.
+
+10. Coisas importantes de erro já vistas
+- Se der `Status` não possui `ordens_servico`, trocar em `OrdemServico`:
+  - de `db.relationship("Status", back_populates="ordens_servico")`
+  - para `db.relationship("Status")`
+- Se `Status` tem coluna `situacao`, usar `status.situacao`, não `status.nome`.
+- Se SQLite diz `no such table`, rodar `db.create_all()` ou migration.
+- Se model mudou e banco não, recriar/migrar.
+- Se campos monetários dão setinhas, renderizar com `type="text"` e `inputmode="decimal"`.
+
+Quando continuar:
+- Me ajude mantendo esse padrão.
+- Prefira mandar códigos completos quando eu pedir, porque estou colando no projeto.
+- Evite depender de endpoints que ainda não existem.
+- Se endpoint ainda não existir, avise e diga onde importar no final do blueprint, tipo `from . import os_novo`.

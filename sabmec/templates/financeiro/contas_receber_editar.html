@@ -1,0 +1,130 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Editar Conta a Receber - SabMec</title>
+{% endblock %}
+
+{% block body %}
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+        <div class="container-fluid px-4 pt-3">
+            {% for categoria, mensagem in mensagens %}
+                <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                    {{ mensagem }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="container-fluid py-5 px-4">
+    <div class="content-wrapper">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('contas_receber.contas_receber', pesquisar=1) }}" class="btn btn-outline-secondary btn-sm rounded-circle">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+
+            <h3 class="text-white m-0">
+                Editar Conta <span class="text-info">#{{ conta.id }}</span>
+            </h3>
+        </div>
+
+        <form method="POST" action="{{ url_for('contas_receber.contas_receber_editar', id=conta.id) }}" novalidate>
+            {% if csrf_token is defined %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% endif %}
+
+            <div class="form-card">
+                <div class="card-header-custom">
+                    <i class="bi bi-cash-coin"></i>
+                    <h5>Dados Bloqueados</h5>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Cliente</label>
+                        <input type="text" class="form-control form-control-sabmec" value="{{ conta.cliente.nome if conta.cliente else '---' }}" readonly>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label-custom">Status</label>
+                        <input type="text" class="form-control form-control-sabmec" value="{{ conta.status_situacao or '---' }}" readonly>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label-custom">Origem</label>
+                        <input type="text" class="form-control form-control-sabmec" value="{{ conta.origem or '---' }}" readonly>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label-custom">Valor da Conta</label>
+                        <input type="text" class="form-control form-control-sabmec" value="R$ {{ '%.2f'|format(conta.valor or 0)|replace('.', ',') }}" readonly>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label-custom">Valor Pago</label>
+                        <input type="text" class="form-control form-control-sabmec text-success" value="R$ {{ '%.2f'|format(conta.valor_pago or 0)|replace('.', ',') }}" readonly>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label-custom">Valor Restante</label>
+                        <input type="text" class="form-control form-control-sabmec text-warning" value="R$ {{ '%.2f'|format(conta.valor_restante or 0)|replace('.', ',') }}" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-card mt-4">
+                <div class="card-header-custom">
+                    <i class="bi bi-pencil-square"></i>
+                    <h5>Dados Editáveis</h5>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label-custom">Descrição*</label>
+                        <input type="text" name="descricao" class="form-control form-control-sabmec" value="{{ request.form.get('descricao', conta.descricao or '') }}" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label-custom">Parcela</label>
+                        <input type="text" name="parcela" class="form-control form-control-sabmec" value="{{ request.form.get('parcela', conta.parcela or '') }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label-custom">Vencimento*</label>
+                        <input type="date" name="vencimento" class="form-control form-control-sabmec" value="{{ request.form.get('vencimento', conta.vencimento.strftime('%Y-%m-%d') if conta.vencimento else '') }}" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label-custom">Referência</label>
+                        <input type="text" name="referencia_id" class="form-control form-control-sabmec" value="{{ request.form.get('referencia_id', conta.referencia_id or '') }}">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label-custom">Observação</label>
+                        <textarea name="observacao" class="form-control form-control-sabmec" rows="3">{{ request.form.get('observacao', conta.observacao or '') }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-5">
+                <p class="text-secondary small m-0">
+                    Cliente, status, valor da conta e valor pago não podem ser alterados por esta tela.
+                </p>
+
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('contas_receber.contas_receber', pesquisar=1) }}" class="btn btn-outline-secondary px-4">
+                        Cancelar
+                    </a>
+
+                    <button type="submit" class="btn px-5 py-2 fw-bold" style="background-color: #9bc8f1; color: #1a1d20; border: none; border-radius: 6px;">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

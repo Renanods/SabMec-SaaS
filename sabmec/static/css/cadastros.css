@@ -1,0 +1,56 @@
+        .content-wrapper { max-width: 900px; margin: 0 auto; }
+        
+        /* Estilização das Abas */
+        .nav-tabs { border-bottom: 2px solid #3d4246; margin-bottom: 2rem; }
+        .nav-link { 
+            color: #888e94 !important; 
+            border: none !important; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            font-size: 0.75rem; 
+            padding: 15px 25px !important;
+        }
+        /* Cor de quando a aba está selecionada */
+        .nav-link.active { 
+            background-color: transparent !important; 
+            color: #9bc8f1 !important; 
+            border-bottom: 3px solid #9bc8f1 !important; 
+        }
+
+        /* Estilos dos Cards que você já usa */
+        .form-card {
+            background-color: #2b2f33; border-radius: 12px; border: 1px solid #3d4246;
+            padding: 2rem; margin-bottom: 2rem;
+        }
+        .card-header-custom {
+            border-bottom: 1px solid #3d4246; margin-bottom: 1.5rem; padding-bottom: 1rem;
+            display: flex; align-items: center; gap: 12px; color: #9bc8f1;
+        }
+        .form-control-sabmec {
+            background-color: #212529 !important; border: 1px solid #3d4246 !important;
+            color: white !important; padding: 0.7rem 1rem;
+        }
+        .form-label-custom {
+            font-size: 0.7rem; font-weight: 700; color: #888e94;
+            text-transform: uppercase; margin-bottom: 0.5rem; display: block;
+        }
+        .form-check-input:checked { background-color: #9bc8f1; border-color: #9bc8f1; }
+
+        .card-linha {
+            transition: all 0.2s ease-in-out;
+            border-left: 5px solid #0dcaf0 !important;
+            min-height: 90px; 
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+        .card-linha:hover {
+            background-color: #2c3136 !important;
+            transform: scale(1.005);
+        }
+        .info-principal {
+            border-right: 1px solid #3d4246;
+            margin-right: 20px;
+            padding-right: 20px;
+            min-width: 280px;
+        }

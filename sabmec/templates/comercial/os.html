@@ -1,0 +1,293 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Ordem de Serviço - SabMec</title>
+<style>
+        /* COMO QUE O BOTÃO FLUTUANTE NÃO TA EM CIMA???????? */
+        .imp {
+            z-index: 9999 !important;
+        }
+        /* Abre as barreiras físicas dos cards para o menu flutuar */
+        .card-linha, .card-body {
+            overflow: visible !important;
+        }
+
+        /* Define uma camada base padrão para os cards */
+        .card-linha {
+            position: relative !important;
+            z-index: 1 !important;
+        }
+
+        /* Quando você passa o mouse, o card sobe apenas um pouco na camada */
+        .card-linha:hover {
+            z-index: 5 !important;
+        }
+
+        /* MAS, se o card tiver um dropdown aberto dentro dele, ele ganha prioridade absoluta */
+        .card-linha:has(.dropdown-menu.show),
+        .card-linha:focus-within {
+            z-index: 9999 !important;
+        }
+
+        /* Garante que o menu flutuante herde e respeite essa prioridade máxima */
+        .dropdown-menu {
+            z-index: 9999 !important;
+        }
+</style>
+{% endblock %}
+
+{% block body %}
+    {% set action_url = url_for('os.os') %}
+    {% set placeholder = 'Buscar OS por código, cliente, documento, placa ou veículo...' %}
+    {% set calendario = True %}
+    {% set os = True %}
+    {% set status = True %}
+    {% set financeiro = False %}
+
+    {% include 'bars/navbar_filtro.html' %}
+
+    <div class="container-fluid px-4 mt-3">
+        <div class="row">
+            {% for ordem in ordens_servico %}
+                {% set situacao = ordem.status.situacao|trim|lower if ordem.status else '' %}
+
+                <div class="col-12">
+                    <div class="card card-linha bg-dark border-secondary text-light shadow-sm">
+                        <div class="card-body d-flex align-items-center py-3">
+                            <div class="info-principal">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-info text-dark">#{{ ordem.id }}</span>
+
+                                    <h5 class="mb-0 fw-bold text-truncate">
+                                        {{ ordem.cliente.nome if ordem.cliente else '---' }}
+                                    </h5>
+                                </div>
+
+                                <div class="d-flex gap-1">
+                                    {% if ordem.status %}
+                                        {% if situacao == 'pendente' %}
+                                            <span class="badge border border-warning text-warning" style="font-size: 0.6rem;">
+                                                {{ ordem.status.situacao }}
+                                            </span>
+                                        {% elif situacao == 'atendido' or situacao == 'atendida' %}
+                                            <span class="badge border border-success text-success" style="font-size: 0.6rem;">
+                                                {{ ordem.status.situacao }}
+                                            </span>
+                                        {% elif situacao == 'cancelado' or situacao == 'cancelada' %}
+                                            <span class="badge border border-danger text-danger" style="font-size: 0.6rem;">
+                                                {{ ordem.status.situacao }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge border border-info text-info" style="font-size: 0.6rem;">
+                                                {{ ordem.status.situacao }}
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+
+                                    <span class="badge border border-secondary text-secondary" style="font-size: 0.6rem;">
+                                        {{ ordem.data_abertura.strftime('%d/%m/%Y') if ordem.data_abertura else '---' }}
+                                    </span>
+
+                                    {% if ordem.pagamento %}
+                                        <span class="badge border border-light text-light" style="font-size: 0.6rem;">
+                                            {{ ordem.pagamento.nome_condicao }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="flex-grow-1 d-flex flex-wrap gap-4 align-items-center">
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Veículo</label>
+
+                                    <span class="small">
+                                        {% if ordem.veiculo %}
+                                            {{ ordem.veiculo.placa }} - {{ ordem.veiculo.modelo }}
+                                        {% else %}
+                                            ---
+                                        {% endif %}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Total</label>
+                                    <span class="small">R$ {{ "%.2f"|format(ordem.total or 0) }}</span>
+                                </div>
+
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Previsão</label>
+
+                                    <span class="small">
+                                        {{ ordem.data_previsao.strftime('%d/%m/%Y') if ordem.data_previsao else '---' }}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Itens</label>
+                                    <span class="small">{{ ordem.itens|length }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-2 ms-5"> 
+                            {% if situacao != 'atendido' and situacao != 'cancelado' %}
+                                <a href="{{ url_for('os.os_editar', id=ordem.id) }}" class="btn btn-outline-light btn-sm px-3">
+                                    <i class="bi bi-pencil"></i>
+                                    <span class="d-none d-md-inline ms-1">Editar</span>
+                                </a>
+                            {% endif %}
+
+                            {% if situacao != 'atendido' and situacao != 'cancelado' %}
+                                <button type="button" class="btn btn-outline-success btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalFaturarOS{{ ordem.id }}">
+                                    <i class="bi bi-receipt"></i>
+                                    <span class="d-none d-md-inline ms-1">Faturar</span>
+                                </button>
+                            {% endif %}
+
+                            {% if situacao == 'atendido' or situacao == 'cancelado' %}
+                                <a href="{{ url_for('os.os_detalhar', id=ordem.id) }}" class="btn btn-outline-info btn-sm px-3">
+                                    <i class="bi bi-eye"></i>
+                                    <span class="d-none d-md-inline ms-1">Detalhar</span>
+                                </a>
+                            {% endif %}
+
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm px-2 text-light border-0" 
+                                        type="button" 
+                                        data-bs-toggle="dropdown" 
+                                        aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end border-secondary shadow">
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2 text-info" href="{{ url_for('impressao_os.imprimir', id=ordem.id) }}" target="_blank">
+                                            <i class="bi bi-printer"></i> Imprimir OS
+                                        </a>
+                                    </li>
+                                    {% if situacao != 'cancelado' %}
+                                        <li><hr class="dropdown-divider border-secondary"></li>
+                                        <li>
+                                            <button type="button" class="dropdown-item d-flex align-items-center gap-2 text-danger" data-bs-toggle="modal" data-bs-target="#modalCancelarOS{{ ordem.id }}">
+                                                <i class="bi bi-x-circle"></i> Cancelar OS
+                                            </button>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modalFaturarOS{{ ordem.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark text-white border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Faturar OS #{{ ordem.id }}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <p class="mb-2">Deseja faturar esta ordem de serviço?</p>
+                                <p class="mb-2">Cliente: <strong>{{ ordem.cliente.nome if ordem.cliente else '---' }}</strong></p>
+                                <p class="mb-2">Total: <strong>R$ {{ "%.2f"|format(ordem.total or 0) }}</strong></p>
+
+                                {% if ordem.pagamento and ordem.pagamento.parcelas %}
+                                    <div class="mt-3">
+                                        <p class="text-secondary small mb-2">Serão geradas as seguintes parcelas no contas a receber:</p>
+                                        <div class="table-responsive">
+                                            <table class="table table-dark table-sm align-middle mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Parcela</th>
+                                                        <th>Vencimento</th>
+                                                        <th class="text-end">Valor</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for parcela in ordem.pagamento.parcelas %}
+                                                        <tr>
+                                                            <td>{{ parcela.numero }}</td>
+                                                            <td>{{ parcela.vencimento.strftime('%d/%m/%Y') if parcela.vencimento else '---' }}</td>
+                                                            <td class="text-end">R$ {{ "%.2f"|format(parcela.valor or 0) }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <p class="text-secondary small mb-0">Como não há parcelas cadastradas, será gerada uma conta única no valor total da OS.</p>
+                                {% endif %}
+                            </div>
+                            <div class="modal-footer border-secondary">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <form method="POST" action="{{ url_for('os.os_faturar', id=ordem.id) }}">
+                                    {% if csrf_token is defined %}
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% endif %}
+                                    <button type="submit" class="btn btn-success">Confirmar Faturamento</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modalCancelarOS{{ ordem.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark text-white border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Cancelar OS #{{ ordem.id }}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <p class="mb-2">Tem certeza que deseja cancelar esta ordem de serviço?</p>
+                                {% if situacao == 'atendido' or situacao == 'atendida' %}
+                                    <p class="text-warning small mb-0">Se esta OS possuir contas a receber pendentes, elas também serão canceladas. Caso exista alguma conta já atendida/paga, o cancelamento será bloqueado até que seja feito o estorno.</p>
+                                {% else %}
+                                    <p class="text-secondary small mb-0">Esta OS será marcada como cancelada.</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="modal-footer border-secondary">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button>
+                                <form method="POST" action="{{ url_for('os.os_cancelar', id=ordem.id) }}">
+                                    {% if csrf_token is defined %}
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% endif %}
+                                    <button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            {% else %}
+                <div class="col-12 text-center py-5">
+                    {% if not busca and not status_id and not data_inicio and not data_fim and not numero_os and not placa %}
+                        <p class="text-secondary">Digite algo ou aperte buscar para listar as ordens de serviço.</p>
+                    {% else %}
+                        <p class="text-secondary">Nenhuma ordem de serviço encontrada para esta busca.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <a href="{{ url_for('os.os_novo') }}" class="btn-flutuante imp">
+        <i class="bi bi-plus"></i>
+    </a>
+
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+        <div class="container-fluid px-4 pt-3">
+            {% for categoria, mensagem in mensagens %}
+                <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                    {{ mensagem }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+{% endblock %}

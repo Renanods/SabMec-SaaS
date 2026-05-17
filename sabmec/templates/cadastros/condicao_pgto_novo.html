@@ -1,0 +1,113 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Nova Condição - SabMec</title>
+{% endblock %}
+
+{% block body %}
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+        <div class="container-fluid px-4 pt-3">
+            {% for categoria, mensagem in mensagens %}
+                <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                    {{ mensagem }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="container-fluid py-5 px-4">
+    <div class="content-wrapper">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('condicao.condicao_pgto') }}" class="btn btn-outline-secondary btn-sm rounded-circle">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h3 class="text-white m-0">Nova Condição de Pagamento</h3>
+        </div>
+
+        <form method="POST" action="{{ url_for('condicao.condicao_pgto_novo') }}" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="form-card">
+                <div class="card-header-custom">
+                    <i class="bi bi-credit-card"></i>
+                    <h5>Identificação e Tipo</h5>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-12 mb-2">
+                        <div class="form-check">
+                            {{ form.a_vista(class="form-check-input", id="aVistaCheck", onchange="toggleAvista()") }}
+                            <label class="form-check-label text-sabmec fw-bold" for="aVistaCheck">VENDA À VISTA</label>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        {{ form.nome.label(class="form-label-custom") }}
+                        {{ form.nome(class="form-control form-control-sabmec") }}
+                    </div>
+                    <div class="col-md-5">
+                        {{ form.forma_pagamento_id.label(class="form-label-custom") }}
+                        {{ form.forma_pagamento_id(class="form-select form-control-sabmec") }}
+                    </div>
+                </div>
+            </div>
+
+            <div id="blocoParcelas" class="form-card mt-4">
+                <div class="card-header-custom">
+                    <i class="bi bi-calendar-range"></i>
+                    <h5>Regras de Parcelamento</h5>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        {{ form.num_parcelas.label(class="form-label-custom") }}
+                        {{ form.num_parcelas(class="form-control form-control-sabmec", id="numParcelas") }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.intervalo_dias.label(class="form-label-custom") }}
+                        {{ form.intervalo_dias(class="form-control form-control-sabmec", id="intervaloDias") }}
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end pb-2">
+                        <div class="form-check">
+                            {{ form.ativo(class="form-check-input", id="ativo") }}
+                            <label class="form-check-label text-white" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-5">
+                <p class="text-secondary small m-0">* Vendas à vista geram parcela única no dia 0.</p>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('condicao.condicao_pgto') }}" class="btn btn-outline-secondary px-4">Cancelar</a>
+                    <button type="submit" class="btn px-5 py-2 fw-bold" style="background-color: #9bc8f1; color: #1a1d20; border: none; border-radius: 6px;">
+                        Salvar Condição
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleAvista() {
+        const isAvista = document.getElementById('aVistaCheck').checked;
+        const inputParcelas = document.getElementById('numParcelas');
+        const inputIntervalo = document.getElementById('intervaloDias');
+        const bloco = document.getElementById('blocoParcelas');
+
+        if (isAvista) {
+            inputParcelas.value = 1;
+            inputIntervalo.value = 0;
+            inputParcelas.readOnly = true;
+            inputIntervalo.readOnly = true;
+            bloco.style.opacity = '0.6';
+        } else {
+            inputParcelas.readOnly = false;
+            inputIntervalo.readOnly = false;
+            bloco.style.opacity = '1';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', toggleAvista);
+</script>
+{% endblock %}

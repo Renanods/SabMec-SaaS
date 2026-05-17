@@ -1,0 +1,610 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Editar Cadastro - SabMec</title>
+{% endblock %}
+
+{% block body %}
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+        <div class="container-fluid px-4 pt-3">
+            {% for categoria, mensagem in mensagens %}
+                <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                    {{ mensagem }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="container-fluid py-5 px-4">
+    <div class="content-wrapper">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('pessoas.pessoas') }}" class="btn btn-outline-secondary btn-sm rounded-circle">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h3 class="text-white m-0">Editar Pessoa: <span class="text-info">{{ pessoa.nome }}</span></h3>
+            <span class="badge bg-dark border border-secondary text-secondary">ID #{{ pessoa.id }}</span>
+            {% if pessoa.filial %}
+                <div class="alert alert-warning">
+                    Este cadastro pertence à filial. Alterações devem ser feitas em Configurações &gt; Filial.
+                </div>
+            {% endif %}
+        </div>
+
+        <form method="POST" action="{{ url_for('pessoas.pessoas_editar', id=pessoa.id) }}" novalidate>
+            {{ form_pessoa.hidden_tag() }}
+
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dados-content" type="button" role="tab">
+                        Dados e Contatos
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="endereco-tab" data-bs-toggle="tab" data-bs-target="#endereco-content" type="button" role="tab">
+                        Endereço
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation" id="clienteTabItem">
+                    <button class="nav-link" id="cliente-tab" data-bs-toggle="tab" data-bs-target="#cliente-content" type="button" role="tab">
+                        Cliente
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation" id="fornecedorTabItem">
+                    <button class="nav-link" id="fornecedor-tab" data-bs-toggle="tab" data-bs-target="#fornecedor-content" type="button" role="tab">
+                        Fornecedor
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation" id="usuarioTabItem">
+                    <button class="nav-link" id="usuario-tab" data-bs-toggle="tab" data-bs-target="#usuario-content" type="button" role="tab">
+                        Usuário
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content mt-4">
+                <div class="tab-pane fade show active" id="dados-content" role="tabpanel">
+                    <div class="form-card">
+                        <div class="card-header-custom">
+                            <i class="bi bi-person-vcard"></i>
+                            <h5>Identificação</h5>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                {{ form_pessoa.nome.label(class="form-label-custom") }}
+                                {{ form_pessoa.nome(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-4">
+                                {{ form_pessoa.documento_fiscal.label(class="form-label-custom") }}
+                                {{ form_pessoa.documento_fiscal(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-8">
+                                {{ form_pessoa.nome_fantasia.label(class="form-label-custom") }}
+                                {{ form_pessoa.nome_fantasia(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-4">
+                                {{ form_pessoa.ie_rg.label(class="form-label-custom") }}
+                                {{ form_pessoa.ie_rg(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-3">
+                                {{ form_pessoa.entidade.label(class="form-label-custom") }}
+                                {{ form_pessoa.entidade(class="form-select form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-9">
+                                <label class="form-label-custom mb-3">Vínculo do Cadastro</label>
+
+                                <div class="d-flex gap-4">
+                                    <div class="form-check">
+                                        {{ form_pessoa.eh_cliente(class="form-check-input", id="tipoCliente", onchange="toggleVinculosCadastro()") }}
+                                        <label class="form-check-label text-white" for="tipoCliente">Cliente</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        {{ form_pessoa.eh_fornecedor(class="form-check-input", id="tipoFornecedor", onchange="toggleVinculosCadastro()") }}
+                                        <label class="form-check-label text-white" for="tipoFornecedor">Fornecedor</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        {{ form_pessoa.eh_usuario(class="form-check-input", id="tipoUsuario", onchange="toggleVinculosCadastro()") }}
+                                        <label class="form-check-label text-white" for="tipoUsuario">Usuário</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        {{ form_pessoa.ativo(class="form-check-input", id="ativo") }}
+                                        <label class="form-check-label text-white" for="ativo">Ativo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-card mt-3">
+                        <div class="card-header-custom">
+                            <i class="bi bi-plus-lg"></i>
+                            <h5>Adicionar Contato</h5>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Tipo</label>
+                                <select name="tipo" class="form-select form-control-sabmec">
+                                    <option value="telefone">Telefone</option>
+                                    <option value="whatsapp">WhatsApp</option>
+                                    <option value="email">E-mail</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-8">
+                                <label class="form-label-custom">Contato</label>
+                                <input type="text" name="valor" class="form-control form-control-sabmec">
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="contato_principal" id="contatoPrincipal">
+                                    <label class="form-check-label text-white" for="contatoPrincipal">Contato principal</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 d-flex justify-content-end">
+                                <button type="submit" name="acao" value="adicionar_contato" class="btn btn-outline-info px-4">
+                                    <i class="bi bi-plus-lg me-1"></i> Adicionar Contato
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-card mt-4">
+                        <div class="card-header-custom">
+                            <i class="bi bi-telephone"></i>
+                            <h5>Contatos Cadastrados</h5>
+                        </div>
+
+                        {% if pessoa.contatos %}
+                            <div class="table-responsive">
+                                <table class="table table-dark table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Tipo</th>
+                                            <th>Contato</th>
+                                            <th>Principal</th>
+                                            <th class="text-end">Ações</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {% for contato in pessoa.contatos %}
+                                            <tr>
+                                                <td>{{ contato.tipo|capitalize }}</td>
+                                                <td>{{ contato.valor }}</td>
+                                                <td>
+                                                    {% if contato.principal %}
+                                                        <span class="badge bg-info text-dark">Principal</span>
+                                                    {% else %}
+                                                        <button type="submit" name="acao" value="definir_contato_principal:{{ contato.id }}" class="btn btn-sm btn-outline-info">
+                                                            Definir
+                                                        </button>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalContato{{ contato.id }}">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+
+                                                    <button type="submit" name="acao" value="excluir_contato:{{ contato.id }}" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-secondary m-0">Nenhum contato cadastrado.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="endereco-content" role="tabpanel">
+                    <div class="form-card">
+                        <div class="card-header-custom">
+                            <i class="bi bi-plus-lg"></i>
+                            <h5>Adicionar Endereço</h5>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label-custom">CEP</label>
+                                <input type="text" name="cep" class="form-control form-control-sabmec">
+                            </div>
+
+                            <div class="col-md-9">
+                                <label class="form-label-custom">Logradouro</label>
+                                <input type="text" name="logradouro" class="form-control form-control-sabmec">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label-custom">Número</label>
+                                <input type="text" name="numero" class="form-control form-control-sabmec" value="S/N">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Bairro</label>
+                                <input type="text" name="bairro" class="form-control form-control-sabmec">
+                            </div>
+
+                            <div class="col-md-5">
+                                <label class="form-label-custom">Complemento</label>
+                                <input type="text" name="complemento" class="form-control form-control-sabmec">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Estado</label>
+                                <select name="estado_id" id="estado_id" class="form-select form-control-sabmec">
+                                    <option value="0">Selecione...</option>
+                                    {% for estado in estados %}
+                                        <option value="{{ estado.id }}">{{ estado.nome }} - {{ estado.uf }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-8">
+                                <label class="form-label-custom">Cidade</label>
+                                <select name="cidade_id" id="cidade_id" class="form-select form-control-sabmec" disabled>
+                                    <option value="0">Selecione um estado primeiro</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="principal" id="principal">
+                                    <label class="form-check-label text-white" for="principal">Endereço principal</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 d-flex justify-content-end">
+                                <button type="submit" name="acao" value="adicionar_endereco" class="btn btn-outline-info px-4">
+                                    <i class="bi bi-plus-lg me-1"></i> Adicionar Endereço
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-card mt-4">
+                        <div class="card-header-custom">
+                            <i class="bi bi-geo-alt"></i>
+                            <h5>Endereços Cadastrados</h5>
+                        </div>
+
+                        {% if pessoa.enderecos %}
+                            <div class="table-responsive">
+                                <table class="table table-dark table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>CEP</th>
+                                            <th>Endereço</th>
+                                            <th>Bairro</th>
+                                            <th>Cidade/UF</th>
+                                            <th>Principal</th>
+                                            <th class="text-end">Ações</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {% for endereco in pessoa.enderecos %}
+                                            <tr>
+                                                <td>{{ endereco.cep }}</td>
+                                                <td>{{ endereco.logradouro }}, {{ endereco.numero }}</td>
+                                                <td>{{ endereco.bairro }}</td>
+                                                <td>{{ endereco.cidade.nome }} / {{ endereco.estado.uf }}</td>
+                                                <td>
+                                                    {% if endereco.principal %}
+                                                        <span class="badge bg-info text-dark">Principal</span>
+                                                    {% else %}
+                                                        <button type="submit" name="acao" value="definir_endereco_principal:{{ endereco.id }}" class="btn btn-sm btn-outline-info">
+                                                            Definir
+                                                        </button>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalEndereco{{ endereco.id }}">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+
+                                                    <button type="submit" name="acao" value="excluir_endereco:{{ endereco.id }}" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-secondary m-0">Nenhum endereço cadastrado.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="cliente-content" role="tabpanel">
+                    <div id="blocoCliente" class="form-card">
+                        <div class="form-check">
+                            {{ form_cliente.cliente_ativo(class="form-check-input", id="clienteAtivo") }}
+                            <label class="form-check-label text-white" for="clienteAtivo">Cliente ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="fornecedor-content" role="tabpanel">
+                    <div id="blocoFornecedor" class="form-card">
+                        <div class="form-check">
+                            {{ form_fornecedor.fornecedor_ativo(class="form-check-input", id="fornecedorAtivo") }}
+                            <label class="form-check-label text-white" for="fornecedorAtivo">Fornecedor ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="usuario-content" role="tabpanel">
+                    <div id="blocoUsuario" class="form-card">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form_usuario.usuario.label(class="form-label-custom") }}
+                                {{ form_usuario.usuario(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="form-check mb-2">
+                                    {{ form_usuario.usuario_ativo(class="form-check-input", id="usuarioAtivo") }}
+                                    <label class="form-check-label text-white" for="usuarioAtivo">Usuário ativo</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% for contato in pessoa.contatos %}
+                    <div class="modal fade" id="modalContato{{ contato.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-md modal-dialog-centered">
+                            <div class="modal-content bg-dark text-white border-secondary">
+                                <div class="modal-header border-secondary">
+                                    <h5 class="modal-title">Editar Contato</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label-custom">Tipo</label>
+                                            <select name="tipo_contato_{{ contato.id }}" class="form-select form-control-sabmec">
+                                                <option value="telefone" {{ 'selected' if contato.tipo == 'telefone' else '' }}>Telefone</option>
+                                                <option value="whatsapp" {{ 'selected' if contato.tipo == 'whatsapp' else '' }}>WhatsApp</option>
+                                                <option value="email" {{ 'selected' if contato.tipo == 'email' else '' }}>E-mail</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-8">
+                                            <label class="form-label-custom">Contato</label>
+                                            <input type="text" name="valor_contato_{{ contato.id }}" class="form-control form-control-sabmec" value="{{ contato.valor or '' }}">
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="contato_principal_{{ contato.id }}" {% if contato.principal %}checked{% endif %}>
+                                                <label class="form-check-label text-white">Contato principal</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer border-secondary">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" name="acao" value="editar_contato:{{ contato.id }}" class="btn btn-info">
+                                        Salvar Contato
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                {% for endereco in pessoa.enderecos %}
+                    <div class="modal fade" id="modalEndereco{{ endereco.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content bg-dark text-white border-secondary">
+                                <div class="modal-header border-secondary">
+                                    <h5 class="modal-title">Editar Endereço</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label-custom">CEP</label>
+                                            <input type="text" name="cep_{{ endereco.id }}" class="form-control form-control-sabmec" value="{{ endereco.cep or '' }}">
+                                        </div>
+
+                                        <div class="col-md-9">
+                                            <label class="form-label-custom">Logradouro</label>
+                                            <input type="text" name="logradouro_{{ endereco.id }}" class="form-control form-control-sabmec" value="{{ endereco.logradouro or '' }}">
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <label class="form-label-custom">Número</label>
+                                            <input type="text" name="numero_{{ endereco.id }}" class="form-control form-control-sabmec" value="{{ endereco.numero or 'S/N' }}">
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label-custom">Bairro</label>
+                                            <input type="text" name="bairro_{{ endereco.id }}" class="form-control form-control-sabmec" value="{{ endereco.bairro or '' }}">
+                                        </div>
+
+                                        <div class="col-md-5">
+                                            <label class="form-label-custom">Complemento</label>
+                                            <input type="text" name="complemento_{{ endereco.id }}" class="form-control form-control-sabmec" value="{{ endereco.complemento or '' }}">
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label-custom">Estado</label>
+                                            <select name="estado_id_{{ endereco.id }}" class="form-select form-control-sabmec estado-modal" data-endereco-id="{{ endereco.id }}">
+                                                {% for estado in estados %}
+                                                    <option value="{{ estado.id }}" {{ 'selected' if endereco.estado_id == estado.id else '' }}>
+                                                        {{ estado.nome }} - {{ estado.uf }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-8">
+                                            <label class="form-label-custom">Cidade</label>
+                                            <select name="cidade_id_{{ endereco.id }}" class="form-select form-control-sabmec cidade-modal" data-endereco-id="{{ endereco.id }}">
+                                                <option value="{{ endereco.cidade_id }}">{{ endereco.cidade.nome }}</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="principal_{{ endereco.id }}" {% if endereco.principal %}checked{% endif %}>
+                                                <label class="form-check-label text-white">Endereço principal</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer border-secondary">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" name="acao" value="editar_endereco:{{ endereco.id }}" class="btn btn-info">
+                                        Salvar Endereço
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-5">
+                    <p class="text-secondary small m-0">* Campos obrigatórios.</p>
+
+                    <div class="d-flex gap-3">
+                        <a href="{{ url_for('pessoas.pessoas') }}" class="btn btn-outline-secondary px-4">Cancelar</a>
+
+                     {% if not pessoa.filial %}
+                        <button type="submit" class="btn px-5 py-2 fw-bold" style="background-color: #9bc8f1; color: #1a1d20; border: none; border-radius: 6px;">
+                            Salvar Alterações
+                        </button>
+                    {% endif %}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function abrirAbaDados() {
+        const dadosTab = document.getElementById('dados-tab');
+
+        if (dadosTab) {
+            const tab = new bootstrap.Tab(dadosTab);
+            tab.show();
+        }
+    }
+
+    function toggleVinculosCadastro() {
+        const checkCliente = document.getElementById('tipoCliente');
+        const checkFornecedor = document.getElementById('tipoFornecedor');
+        const checkUsuario = document.getElementById('tipoUsuario');
+
+        const clienteTabItem = document.getElementById('clienteTabItem');
+        const fornecedorTabItem = document.getElementById('fornecedorTabItem');
+        const usuarioTabItem = document.getElementById('usuarioTabItem');
+
+        const blocoCliente = document.getElementById('blocoCliente');
+        const blocoFornecedor = document.getElementById('blocoFornecedor');
+        const blocoUsuario = document.getElementById('blocoUsuario');
+
+        clienteTabItem.style.display = checkCliente.checked ? 'block' : 'none';
+        fornecedorTabItem.style.display = checkFornecedor.checked ? 'block' : 'none';
+        usuarioTabItem.style.display = checkUsuario.checked ? 'block' : 'none';
+
+        blocoCliente.style.display = checkCliente.checked ? 'block' : 'none';
+        blocoFornecedor.style.display = checkFornecedor.checked ? 'block' : 'none';
+        blocoUsuario.style.display = checkUsuario.checked ? 'block' : 'none';
+
+        if (!checkCliente.checked && document.getElementById('cliente-tab').classList.contains('active')) {
+            abrirAbaDados();
+        }
+
+        if (!checkFornecedor.checked && document.getElementById('fornecedor-tab').classList.contains('active')) {
+            abrirAbaDados();
+        }
+
+        if (!checkUsuario.checked && document.getElementById('usuario-tab').classList.contains('active')) {
+            abrirAbaDados();
+        }
+    }
+
+    async function carregarCidades(estadoId, cidadeSelect, cidadeSelecionada = null) {
+        cidadeSelect.innerHTML = '<option value="0">Carregando...</option>';
+        cidadeSelect.disabled = true;
+
+        if (!estadoId || estadoId === '0') {
+            cidadeSelect.innerHTML = '<option value="0">Selecione um estado primeiro</option>';
+            return;
+        }
+
+        const response = await fetch("{{ url_for('pessoas.cidades_por_estado', estado_id=0) }}".replace("0", estadoId));
+        const data = await response.json();
+
+        cidadeSelect.innerHTML = '<option value="0">Selecione...</option>';
+
+        data.cidades.forEach(function (cidade) {
+            const option = document.createElement('option');
+            option.value = cidade.id;
+            option.textContent = cidade.nome;
+
+            if (cidadeSelecionada && String(cidade.id) === String(cidadeSelecionada)) {
+                option.selected = true;
+            }
+
+            cidadeSelect.appendChild(option);
+        });
+
+        cidadeSelect.disabled = false;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleVinculosCadastro();
+
+        const estadoSelect = document.getElementById('estado_id');
+        const cidadeSelect = document.getElementById('cidade_id');
+
+        if (estadoSelect && cidadeSelect) {
+            estadoSelect.addEventListener('change', function () {
+                carregarCidades(this.value, cidadeSelect);
+            });
+        }
+
+        document.querySelectorAll('.estado-modal').forEach(function (estadoModal) {
+            estadoModal.addEventListener('change', function () {
+                const enderecoId = this.dataset.enderecoId;
+                const cidadeModal = document.querySelector('.cidade-modal[data-endereco-id="' + enderecoId + '"]');
+
+                carregarCidades(this.value, cidadeModal);
+            });
+        });
+    });
+</script>
+{% endblock %}

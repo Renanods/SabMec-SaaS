@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+
+    <style>
+        @page { margin: 8px 12px; }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #222;
+            font-size: 11px;
+        }
+
+        .header {
+            width: 100%;
+            border-bottom: 2px solid #9bc8f1;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+        }
+
+        .titulo-empresa {
+            font-size: 20px;
+            color: #74b7f7;
+            font-weight: bold;
+        }
+
+        .info-sec {
+            font-size: 10px;
+            color: #555;
+        }
+
+        .os-num {
+            font-size: 16px;
+            font-weight: bold;
+            color: #74b7f7;
+            text-align: right;
+        }
+
+        .bloco {
+            margin-bottom: 8px;
+        }
+
+        .bloco-titulo {
+            font-size: 11px;
+            font-weight: bold;
+            color: #74b7f7;
+            margin-bottom: 3px;
+            border-bottom: 1px solid #9bc8f1;
+        }
+
+        .caixa {
+            border: 1px solid #ddd;
+            background: #fafafa;
+            padding: 5px;
+            min-height: 35px;
+        }
+
+        .mini-box {
+            border: 1px solid #ddd;
+            padding: 4px;
+            font-size: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            color: #fff;
+            font-size: 9.5px;
+            border-radius: 3px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* Suporte completo para IDs (1 e 2) e Nomes (Pendente e Atendida) */
+        .st-1, .st-pendente { background: #f39c12; }
+        .st-2, .st-atendida { background: #27ae60; }
+        .st-default { background: #7f8c8d; }
+        
+        table { width: 100%; border-collapse: collapse; }
+
+        .itens td {
+            border-bottom: 1px dotted #bbb;
+            padding: 3px 2px;
+            font-size: 10px;
+        }
+
+        .total-box {
+            border: 1px solid #f2f3f3;
+            background: #f2f3f3;
+            padding: 6px;
+            font-size: 11px;
+        }
+
+        .linha-total {
+            font-size: 14px;
+            font-weight: bold;
+            color: #74b7f7;
+            border-top: 1px solid #74b7f7;
+            padding-top: 5px;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .assinaturas {
+            margin-top: 30px;
+            width: 100%;
+        }
+
+        .ass-box {
+            width: 48%;
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .ass-linha {
+            border-top: 1px solid #444;
+            margin-bottom: 3px;
+        }
+
+        .rodape {
+            margin-top: 30px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+{% set contato_principal = empresa.contatos | selectattr('principal', 'equalto', true) | first or empresa.contatos | first %}
+<section>
+    <table class="header">
+        <tr>
+            <td style="width: 70px; padding-right: 10px; vertical-align: middle;">
+                {% if logo_path %}
+                    <img src="{{ logo_path }}" style="max-width: 70px; max-height: 50px; display: block;" alt="Logo">
+                {% else %}
+                    <div style="width: 70px; height: 45px;"></div>
+                {% endif %}
+            </td>
+
+            <td style="vertical-align: middle;">
+                <div class="titulo-empresa">{{ empresa.nome_fantasia or empresa.nome }}</div>
+                <div class="info-sec">
+                    {% if contato_principal %}
+                        <b>{{ contato_principal.tipo | capitalize }}: {{ contato_principal.valor }}</b>
+                    {% endif %}
+                </div>
+            </td>
+
+            <td class="os-num" style="vertical-align: middle; width: 40%;">
+                ORDEM DE SERVIÇO #{{ os.id }}<br>
+                <span style="font-size:10px;">
+                    Abertura: {{ os.data_abertura.strftime('%d/%m/%Y %H:%M') }}
+                    {% if os.data_previsao %} | Prev: {{ os.data_previsao.strftime('%d/%m/%Y') }}{% endif %}
+                </span>
+            </td>
+        </tr>
+    </table>
+
+    <table style="width:100%; margin-bottom: 12px;">
+        <tr>
+            <td class="mini-box" width="40%">
+                <b>Cliente</b><br>
+                {{ os.cliente.nome }}<br>
+                Doc: {{ os.cliente.documento_fiscal or '-' }}
+            </td>
+            <td class="mini-box" width="40%">
+                <b>Veículo</b><br>
+                {{ os.veiculo.marca }} {{ os.veiculo.modelo }}<br>
+                Placa: {{ os.veiculo.placa }} | KM: {{ os.km or '-' }}
+            </td>
+            <td class="mini-box" width="20%" align="center" style="vertical-align: middle;">
+                <b>Situação</b><br style="margin-bottom: 2px;">
+                <span>
+                    {% if os.status_id == 1 %} Pendente {% else %} Atendido {% endif %}
+                </span>
+            </td>
+        </tr>
+    </table>
+
+    <table style="width:100%; margin-bottom: 12px;">
+        <tr>
+            <td width="33.3%">
+                <div class="bloco" style="margin-right: 5px;">
+                    <div class="bloco-titulo">Relato do Cliente</div>
+                    <div class="caixa">{{ os.relato_cliente or '---' }}</div>
+                </div>
+            </td>
+            <td width="33.3%">
+                <div class="bloco" style="margin-right: 5px; margin-left: 5px;">
+                    <div class="bloco-titulo">Diagnóstico Técnico</div>
+                    <div class="caixa">{{ os.diagnostico or '---' }}</div>
+                </div>
+            </td>
+            <td width="33.3%">
+                <div class="bloco" style="margin-left: 5px;">
+                    <div class="bloco-titulo">Observações Internas</div>
+                    <div class="caixa">{{ os.observacao or '---' }}</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <table style="width:100%; margin-bottom: 12px;">
+        <tr>
+            <td>
+                <div class="bloco">
+                    <div class="bloco-titulo">Serviços</div>
+                    <table class="itens">
+                        {% for item in os.itens if item.tipo == 'Servico' %}
+                        <tr>
+                            <td>{{ item.descricao }}</td>
+                            <td align="right" width="120">{{ item.quantidade }}x R$ {{ "%.2f"|format(item.valor_unitario) }}</td>
+                            <td align="right" width="100"><b>R$ {{ "%.2f"|format(item.total) }}</b></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" style="color:#999; font-style:italic;">Nenhum serviço aplicado.</td></tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <table style="width:100%; margin-bottom: 12px;">
+        <tr>
+            <td>
+                <div class="bloco">
+                    <div class="bloco-titulo">Peças / Produtos</div>
+                    <table class="itens">
+                        {% for item in os.itens if item.tipo == 'Produto' %}
+                        <tr>
+                            <td>{{ item.descricao }}</td>
+                            <td align="right" width="120">{{ item.quantidade }}x R$ {{ "%.2f"|format(item.valor_unitario) }}</td>
+                            <td align="right" width="100"><b>R$ {{ "%.2f"|format(item.total) }}</b></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" style="color:#999; font-style:italic;">Nenhuma peça aplicada.</td></tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <table style="width:100%; margin-bottom: 12px;">
+        <tr>
+            <td>
+                <div class="total-box">
+                    Subtotal Serviços: R$ {{ "%.2f"|format(os.subtotal_servicos) }}<br>
+                    Subtotal Peças: R$ {{ "%.2f"|format(os.subtotal_produtos) }}<br>
+
+                    {% if os.desconto > 0 or os.acrescimo > 0 %}
+                    Ajustes (Desc/Acrés): R$ {{ "%.2f"|format(os.acrescimo - os.desconto) }}<br>
+                    {% endif %}
+
+                    {% if os.pagamento %}
+                    Forma: <b>{{ os.pagamento.nome_condicao }} ({{ os.pagamento.quantidade_parcelas }}x)</b><br>
+                    {% endif %}
+
+                    <div class="linha-total">
+                        Total: R$ {{ "%.2f"|format(os.total) }}
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+    {% if rodape != None %}
+    <table class="rodape">
+        <h5>{{ rodape }}</h5>
+    </table>
+    {% endif %}
+    <br>
+    <table class="assinaturas">
+        <tr>
+            <td class="ass-box">
+                <div class="ass-linha"></div>
+                Assinatura do Cliente
+            </td>
+            <td class="ass-box">
+                <div class="ass-linha"></div>
+                Responsável Técnico
+            </td>
+        </tr>
+    </table>
+</section>
+</body>
+</html>

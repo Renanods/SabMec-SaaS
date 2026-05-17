@@ -1,0 +1,312 @@
+<style>
+    /* Estilização da barra de rolagem (Scrollbar) para navegadores baseados em Webkit (Chrome, Edge, Safari, Opera) */
+    nav.overflow-y-auto::-webkit-scrollbar {
+        width: 6px; /* Deixa a barra bem fininha */
+    }
+
+    /* O fundo por onde o scroll corre (Pista) */
+    nav.overflow-y-auto::-webkit-scrollbar-track {
+        background: #1a1d20; /* Um tom escuro combinando com o bg-dark */
+    }
+
+    /* O botão que o usuário arrasta (Elemento móvel) */
+    nav.overflow-y-auto::-webkit-scrollbar-thumb {
+        background: #495057; /* Cor cinza intermediária */
+        border-radius: 10px; /* Deixa as bordas arredondadas */
+    }
+
+    /* Cor do botão quando o usuário passa o mouse por cima */
+    nav.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        background: #9bc8f1; /* Usa a cor sabmec-active no hover para dar um charme */
+    }
+
+    /* Suporte para o Firefox (que usa uma sintaxe diferente e mais simples) */
+    nav.overflow-y-auto {
+        scrollbar-width: thin; /* Deixa fino no Firefox */
+        scrollbar-color: #495057 #1a1d20; /* Cor do botão e cor da pista no Firefox */
+    }
+    .text-sabmec { color: #9bc8f1 !important; }
+
+    .bg-sabmec-active {
+        background-color: #9bc8f1 !important;
+        color: #1a1d20 !important;
+        font-weight: 600;
+    }
+
+    .hover-sidebar:hover {
+        background-color: rgba(155, 200, 241, 0.1);
+        color: #9bc8f1 !important;
+        transition: 0.2s;
+    }
+
+    .hover-danger:hover {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #ff6b6b !important;
+        transition: 0.2s;
+    }
+
+    .nav-link {
+        text-decoration: none;
+        transition: 0.2s;
+    }
+
+    .submenu-link {
+        font-size: 0.9rem;
+        padding-left: 3.2rem !important;
+    }
+
+    .sidebar-chevron {
+        transition: transform 0.2s;
+    }
+
+    [aria-expanded="true"] .sidebar-chevron {
+        transform: rotate(90deg);
+    }
+</style>
+
+{% set endpoint = request.endpoint or '' %}
+
+{% set cadastros_aberto =
+    endpoint.startswith('pessoas.') or
+    endpoint.startswith('itens.') or
+    endpoint.startswith('veiculos.') or
+    endpoint.startswith('condicao.')
+%}
+
+{% set comercial_aberto =
+    endpoint.startswith('os.')
+%}
+
+{% set financeiro_aberto =
+    endpoint.startswith('contas_receber.')
+%}
+
+<nav class="col-md-3 col-lg-2 d-md-block bg-dark border-end border-secondary border-opacity-25 p-0 shadow-lg sticky-top vh-100 d-flex flex-column overflow-y-auto">
+
+    <div class="pt-4 flex-grow-1">
+
+        <div class="px-4 mb-5">
+            <h4 class="fw-bold m-0 text-white">
+                <i class="bi bi-gear-fill text-sabmec me-2"></i>
+                Sab<span class="text-sabmec">Mec</span>
+            </h4>
+
+            <span class="text-secondary small fw-light">
+                {{ empresa_sidebar.nome_fantasia or empresa_sidebar.nome if empresa_sidebar else 'Sem Empresa' }}
+            </span>
+        </div>
+
+        <div class="px-3">
+            <ul class="nav flex-column gap-2">
+
+                <li class="nav-item">
+                    <a class="nav-link rounded-3 py-2 px-3 d-flex align-items-center {{ 'bg-sabmec-active' if endpoint == 'main.home' else 'text-secondary hover-sidebar' }}"
+                       href="{{ url_for('main.home') }}">
+
+                        <i class="bi bi-house-door me-3 fs-5"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link rounded-3 py-2 px-3 d-flex align-items-center {{ 'bg-sabmec-active' if endpoint == 'main.dashboard' else 'text-secondary hover-sidebar' }}"
+                       href="{{ url_for('main.dashboard') }}">
+
+                        <i class="bi bi-clipboard-data me-3 fs-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+
+                    <a class="nav-link rounded-3 py-2 px-3 d-flex align-items-center justify-content-between {{ 'bg-sabmec-active' if cadastros_aberto else 'text-secondary hover-sidebar' }}"
+                       data-bs-toggle="collapse"
+                       href="#menuCadastros"
+                       role="button"
+                       aria-expanded="{{ 'true' if cadastros_aberto else 'false' }}"
+                       aria-controls="menuCadastros">
+
+                        <span class="d-flex align-items-center">
+                            <i class="bi bi-folder me-3 fs-5"></i>
+                            <span>Cadastros</span>
+                        </span>
+
+                        <i class="bi bi-chevron-right sidebar-chevron"></i>
+                    </a>
+
+                    <div class="collapse {{ 'show' if cadastros_aberto else '' }}"
+                         id="menuCadastros">
+
+                        <ul class="nav flex-column mt-2 gap-1">
+
+                            <li class="nav-item">
+                                <a class="nav-link rounded-3 py-2 submenu-link {{ 'bg-sabmec-active' if endpoint.startswith('pessoas.') else 'text-secondary hover-sidebar' }}"
+                                   href="{{ url_for('pessoas.pessoas') }}">
+
+                                    <i class="bi bi-people me-3 fs-5"></i>
+                                    Pessoas
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rounded-3 py-2 submenu-link {{ 'bg-sabmec-active' if endpoint.startswith('itens.') else 'text-secondary hover-sidebar' }}"
+                                   href="{{ url_for('itens.itens') }}">
+
+                                    <i class="bi bi-box-seam me-3 fs-5"></i>
+                                    Itens
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rounded-3 py-2 submenu-link {{ 'bg-sabmec-active' if endpoint.startswith('veiculos.') else 'text-secondary hover-sidebar' }}"
+                                   href="{{ url_for('veiculos.veiculos') }}">
+
+                                    <i class="bi bi-car-front me-3 fs-5"></i>
+                                    Veículos
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rounded-3 py-2 submenu-link {{ 'bg-sabmec-active' if endpoint.startswith('condicao.') else 'text-secondary hover-sidebar' }}"
+                                   href="{{ url_for('condicao.condicao_pgto') }}">
+
+                                    <i class="bi bi-credit-card me-3 fs-5"></i>
+                                    Cond. de Pagamento
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+
+                    <a class="nav-link rounded-3 py-2 px-3 d-flex align-items-center justify-content-between {{ 'bg-sabmec-active' if comercial_aberto else 'text-secondary hover-sidebar' }}"
+                       data-bs-toggle="collapse"
+                       href="#menuComercial"
+                       role="button"
+                       aria-expanded="{{ 'true' if comercial_aberto else 'false' }}"
+                       aria-controls="menuComercial">
+
+                        <span class="d-flex align-items-center">
+                            <i class="bi bi-pencil-square me-3 fs-5"></i>
+                            <span>Comercial</span>
+                        </span>
+
+                        <i class="bi bi-chevron-right sidebar-chevron"></i>
+                    </a>
+
+                    <div class="collapse {{ 'show' if comercial_aberto else '' }}"
+                         id="menuComercial">
+
+                        <ul class="nav flex-column mt-2 gap-1">
+
+                            <li class="nav-item">
+                                <a class="nav-link rounded-3 py-2 submenu-link {{ 'bg-sabmec-active' if endpoint.startswith('os.') else 'text-secondary hover-sidebar' }}"
+                                   href="{{ url_for('os.os') }}">
+
+                                    <i class="bi bi-pencil-square me-3 fs-5"></i>
+                                    Ordens de Serviço
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+
+                    <a class="nav-link rounded-3 py-2 px-3 d-flex align-items-center justify-content-between {{ 'bg-sabmec-active' if financeiro_aberto else 'text-secondary hover-sidebar' }}"
+                       data-bs-toggle="collapse"
+                       href="#menuFinanceiro"
+                       role="button"
+                       aria-expanded="{{ 'true' if financeiro_aberto else 'false' }}"
+                       aria-controls="menuFinanceiro">
+
+                        <span class="d-flex align-items-center">
+                            <i class="bi bi-cash-coin me-3 fs-5"></i>
+                            <span>Financeiro</span>
+                        </span>
+
+                        <i class="bi bi-chevron-right sidebar-chevron"></i>
+                    </a>
+
+                    <div class="collapse {{ 'show' if financeiro_aberto else '' }}"
+                         id="menuFinanceiro">
+
+                        <ul class="nav flex-column mt-2 gap-1">
+
+                            <li class="nav-item">
+                                <a class="nav-link rounded-3 py-2 submenu-link {{ 'bg-sabmec-active' if endpoint.startswith('contas_receber.') else 'text-secondary hover-sidebar' }}"
+                                   href="{{ url_for('contas_receber.contas_receber') }}">
+
+                                    <i class="bi bi-cash me-3 fs-5"></i>
+                                    Contas a Receber
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+
+    <div class="px-3 pb-4 mt-auto">
+
+        <ul class="nav flex-column gap-2">
+
+            <li class="nav-item">
+                <a class="nav-link text-secondary rounded-3 py-2 px-3 d-flex align-items-center hover-sidebar"
+                   href="{{ url_for('configuracoes.configuracoes') }}">
+
+                    <i class="bi bi-gear me-3 fs-5"></i>
+                    <span>Configurações</span>
+                </a>
+            </li>
+
+            <li class="my-2 px-3">
+                <hr class="border-secondary border-opacity-50 m-0">
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link text-danger-emphasis rounded-3 py-2 px-3 d-flex align-items-center hover-danger"
+                   href="{{ url_for('auth.logout') }}">
+
+                    <i class="bi bi-box-arrow-left me-3 fs-5"></i>
+                    <span>Sair do Sistema</span>
+                </a>
+            </li>
+
+        </ul>
+
+        <li class="my-3 px-3">
+            <hr class="border-secondary border-opacity-50 m-0">
+        </li>
+
+        <li class="nav-item mt-3 px-3 ms-3">
+
+            <div class="d-flex align-items-center">
+
+                <div class="rounded-circle bg-sabmec-active d-flex align-items-center justify-content-center me-3"
+                     style="width: 38px; height: 38px;">
+
+                    <i class="bi bi-person-fill"></i>
+                </div>
+
+                <div class="d-flex flex-column overflow-hidden">
+
+                    <span class="text-white small fw-semibold text-truncate">
+                        {{ current_user.pessoa_id }} - {{ current_user.usuario }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </li>
+
+    </div>
+
+</nav>

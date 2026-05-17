@@ -1,0 +1,133 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Cadastro de Pessoas - SabMec</title>
+{% endblock %}
+
+{% block body %}
+    {% set action_url = url_for('pessoas.pessoas') %}
+    {% set placeholder = 'Buscar por nome, CPF ou código...' %}
+    {% set tipo_pessoa = True %}
+    {% set tipo_item = False %}
+
+    {% include 'bars/navbar.html' %}
+
+    <div class="container-fluid px-4 mt-3">
+        <div class="row">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            {% for pessoa in pessoas %}
+                <div class="col-12">
+                    <div class="card card-linha bg-dark border-secondary text-light shadow-sm">
+                        <div class="card-body d-flex align-items-center py-3">
+
+                            <div class="info-principal">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-info text-dark">#{{ pessoa.id }}</span>
+                                    <h5 class="mb-0 fw-bold text-truncate">{{ pessoa.nome }}</h5>
+                                </div>
+
+                                <div class="d-flex gap-1">
+                                    {% if pessoa.eh_cliente %}
+                                        <span class="badge border border-info text-info" style="font-size: 0.6rem;">CLIENTE</span>
+                                    {% endif %}
+
+                                    {% if pessoa.eh_fornecedor %}
+                                        <span class="badge border border-warning text-warning" style="font-size: 0.6rem;">FORNECEDOR</span>
+                                    {% endif %}
+
+                                    {% if pessoa.eh_usuario %}
+                                        <span class="badge border border-light text-light" style="font-size: 0.6rem;">USUÁRIO</span>
+                                    {% endif %}
+
+                                    {% if pessoa.ativo %}
+                                        <span class="badge border border-success text-success" style="font-size: 0.6rem;">ATIVO</span>
+                                    {% else %}
+                                        <span class="badge border border-secondary text-secondary" style="font-size: 0.6rem;">INATIVO</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="flex-grow-1 d-flex flex-wrap gap-4 align-items-center me-3">
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">CPF/CNPJ</label>
+                                    <span class="small">{{ pessoa.documento_fiscal or '---' }}</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 ms-auto">
+                                <a href="{{ url_for('pessoas.pessoas_editar', id=pessoa.id) }}" class="btn btn-outline-light btn-sm px-3 me-2">
+                                    <i class="bi bi-pencil"></i>
+                                    <span class="d-none d-md-inline ms-1">Editar</span>
+                                </a>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirPessoa{{ pessoa.id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modalExcluirPessoa{{ pessoa.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark text-white border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Excluir cadastro</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <p class="mb-2">
+                                    Tem certeza que deseja excluir <strong>{{ pessoa.nome }}</strong>?
+                                </p>
+
+                                <p class="text-secondary small mb-0">
+                                    Se este cadastro possuir vínculos no sistema, ele não será excluído. O cadastro será apenas inativado.
+                                </p>
+                            </div>
+
+                            <div class="modal-footer border-secondary">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                    Cancelar
+                                </button>
+
+                                <form method="POST" action="{{ url_for('pessoas.pessoas_excluir', id=pessoa.id) }}">
+                                    {% if csrf_token is defined %}
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% endif %}
+
+                                    <button type="submit" class="btn btn-danger">
+                                        Confirmar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12 text-center py-5">
+                    {% if not busca and not tipo_pessoa_selecionado and not status %}
+                        <p class="text-secondary">Digite algo ou aperte buscar para listar as pessoas.</p>
+                    {% else %}
+                        <p class="text-secondary">Nenhum registro encontrado para esta busca.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <a href="{{ url_for('pessoas.pessoas_novo') }}" class="btn-flutuante">
+        <i class="bi bi-plus-lg"></i>
+    </a>
+{% endblock %}

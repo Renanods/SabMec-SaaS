@@ -1,0 +1,102 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Nova Conta a Receber - SabMec</title>
+{% endblock %}
+
+{% block body %}
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+        <div class="container-fluid px-4 pt-3">
+            {% for categoria, mensagem in mensagens %}
+                <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                    {{ mensagem }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="container-fluid py-5 px-4">
+    <div class="content-wrapper">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('contas_receber.contas_receber') }}" class="btn btn-outline-secondary btn-sm rounded-circle">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+
+            <h3 class="text-white m-0">Nova Conta a Receber</h3>
+        </div>
+
+        <form method="POST" action="{{ url_for('contas_receber.contas_receber_novo') }}" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="form-card">
+                <div class="card-header-custom">
+                    <i class="bi bi-cash-coin"></i>
+                    <h5>Dados da Conta</h5>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        {{ form.cliente_id.label(class="form-label-custom") }}
+                        {{ form.cliente_id(class="form-select form-control-sabmec") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label-custom">Origem</label>
+                        <input type="text" class="form-control form-control-sabmec" value="AVULSO" readonly>
+                        <input type="hidden" name="origem" value="AVULSO">
+                    </div>
+
+                    <div class="col-md-8">
+                        {{ form.descricao.label(class="form-label-custom") }}
+                        {{ form.descricao(class="form-control form-control-sabmec", placeholder="Ex: PAGAMENTO AVULSO, PEÇA, SERVIÇO EXTRA...") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.parcela.label(class="form-label-custom") }}
+                        {{ form.parcela(class="form-control form-control-sabmec", placeholder="1/1") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.valor.label(class="form-label-custom") }}
+                        {{ form.valor(class="form-control form-control-sabmec", type="text", inputmode="decimal", placeholder="0,00") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.vencimento.label(class="form-label-custom") }}
+                        {{ form.vencimento(class="form-control form-control-sabmec") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.referencia_id.label(class="form-label-custom") }}
+                        {{ form.referencia_id(class="form-control form-control-sabmec", placeholder="Opcional") }}
+                    </div>
+
+                    <div class="col-md-12">
+                        {{ form.observacao.label(class="form-label-custom") }}
+                        {{ form.observacao(class="form-control form-control-sabmec", rows="3") }}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-5">
+                <p class="text-secondary small m-0">Conta avulsa sem vínculo com OS ou venda.</p>
+
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('contas_receber.contas_receber') }}" class="btn btn-outline-secondary px-4">
+                        Cancelar
+                    </a>
+
+                    <button type="submit" class="btn px-5 py-2 fw-bold" style="background-color: #9bc8f1; color: #1a1d20; border: none; border-radius: 6px;">
+                        Salvar Conta
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

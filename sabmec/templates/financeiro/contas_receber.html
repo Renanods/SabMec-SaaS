@@ -1,0 +1,351 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Contas a Receber - SabMec</title>
+{% endblock %}
+
+{% block body %}
+    {% set action_url = url_for('contas_receber.contas_receber') %}
+    {% set placeholder = 'Buscar por cliente, descrição ou referência...' %}
+    {% set calendario = True %}
+    {% set status = True %}
+    {% set financeiro = True %}
+
+    {% include 'bars/navbar_filtro.html' %}
+
+    <div class="container-fluid px-4 mt-3">
+        <div class="row">
+            {% for conta in contas_receber %}
+                {% set situacao_conta = conta.status_situacao|trim|lower if conta.status_situacao else '' %}
+
+                <div class="col-12">
+                    <div class="card card-linha bg-dark border-secondary text-light shadow-sm">
+                        <div class="card-body d-flex align-items-center py-3">
+
+                            <div class="info-principal">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-info text-dark">#{{ conta.id }}</span>
+
+                                    <h5 class="mb-0 fw-bold text-truncate">
+                                        {{ conta.descricao }}
+                                    </h5>
+                                </div>
+
+                                <div class="d-flex gap-1">
+                                    {% if conta.status_situacao %}
+                                        {% if situacao_conta == 'pendente' %}
+                                            <span class="badge border border-warning text-warning" style="font-size: 0.6rem;">
+                                                {{ conta.status_situacao }}
+                                            </span>
+                                        {% elif situacao_conta == 'pago' or situacao_conta == 'paga' or situacao_conta == 'atendido' or situacao_conta == 'atendida' %}
+                                            <span class="badge border border-success text-success" style="font-size: 0.6rem;">
+                                                {{ conta.status_situacao }}
+                                            </span>
+                                        {% elif situacao_conta == 'parcial' %}
+                                            <span class="badge border border-info text-info" style="font-size: 0.6rem;">
+                                                {{ conta.status_situacao }}
+                                            </span>
+                                        {% elif situacao_conta == 'cancelado' or situacao_conta == 'cancelada' %}
+                                            <span class="badge border border-danger text-danger" style="font-size: 0.6rem;">
+                                                {{ conta.status_situacao }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge border border-secondary text-secondary" style="font-size: 0.6rem;">
+                                                {{ conta.status_situacao }}
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+
+                                    <span class="badge border border-secondary text-secondary" style="font-size: 0.6rem;">
+                                        {{ conta.vencimento.strftime('%d/%m/%Y') if conta.vencimento else '---' }}
+                                    </span>
+
+                                    {% if conta.origem %}
+                                        <span class="badge border border-light text-light" style="font-size: 0.6rem;">
+                                            {{ conta.origem }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="flex-grow-1 d-flex flex-wrap gap-4 align-items-center">
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Cliente</label>
+                                    <span class="small">
+                                        {{ conta.cliente.nome if conta.cliente else '---' }}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Parcela</label>
+                                    <span class="small">
+                                        {{ conta.parcela or '---' }}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Valor</label>
+                                    <span class="small">
+                                        R$ {{ "%.2f"|format(conta.valor or 0)|replace(".", ",") }}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Pago</label>
+                                    <span class="small text-success">
+                                        R$ {{ "%.2f"|format(conta.valor_pago or 0)|replace(".", ",") }}
+                                    </span>
+                                </div>
+                                {% if situacao_conta != 'cancelado' and situacao_conta != 'atendido' %}
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Restante</label>
+                                    <span class="small text-warning">
+                                        R$ {{ "%.2f"|format(conta.valor_restante or 0)|replace(".", ",") }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex gap-2 ms-5">
+                            {% if situacao_conta != 'cancelado' and situacao_conta != 'atendido' %}
+                            
+                               <a href="{{ url_for('contas_receber.contas_receber_editar', id=conta.id) }}" class="btn btn-outline-light btn-sm px-3">
+                                    <i class="bi bi-pencil"></i>
+                                    <span class="d-none d-md-inline ms-1">Editar</span>
+                                </a>
+
+                            {% endif %}
+
+                                {% if situacao_conta != 'cancelado' and situacao_conta != 'atendido' %}
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-success btn-sm px-3"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalBaixarConta{{ conta.id }}"
+                                    >
+                                        <i class="bi bi-cash-coin"></i>
+                                        <span class="d-none d-md-inline ms-1">Baixar</span>
+                                    </button>
+                                {% endif %}
+                                {% if situacao_conta == 'atendido' %}
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-warning btn-sm px-3"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalEstornarConta{{ conta.id }}"
+                                    >
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                        <span class="d-none d-md-inline ms-1">Estornar</span>
+                                    </button>
+                                {% endif %}
+                                {% if situacao_conta == 'pendente' %}
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-danger btn-sm px-3"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalCancelarConta{{ conta.id }}"
+                                    >
+                                        <i class="bi bi-x-circle"></i>
+                                        <span class="d-none d-md-inline ms-1">Cancelar</span>
+                                    </button>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal da baixa -->
+                <div class="modal fade" id="modalBaixarConta{{ conta.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark text-white border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Baixar Conta #{{ conta.id }}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+
+                            <form method="POST" action="{{ url_for('contas_receber.contas_receber_baixar', id=conta.id) }}">
+                                {% if csrf_token is defined %}
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                {% endif %}
+
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="d-block text-secondary small mb-0">Cliente</label>
+                                        <span>{{ conta.cliente.nome if conta.cliente else '---' }}</span>
+                                    </div>
+
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-4">
+                                            <label class="d-block text-secondary small mb-0">Valor</label>
+                                            <span>R$ {{ "%.2f"|format(conta.valor or 0)|replace(".", ",") }}</span>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="d-block text-secondary small mb-0">Pago</label>
+                                            <span class="text-success">R$ {{ "%.2f"|format(conta.valor_pago or 0)|replace(".", ",") }}</span>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="d-block text-secondary small mb-0">Restante</label>
+                                            <span class="text-warning">R$ {{ "%.2f"|format(conta.valor_restante or 0)|replace(".", ",") }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label-custom">Data do pagamento*</label>
+                                            <input type="date" name="data_pagamento" class="form-control form-control-sabmec" value="{{ hoje }}" required>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label-custom">Valor pago*</label>
+                                            <input type="text" name="valor_pago" class="form-control form-control-sabmec" inputmode="decimal" value="{{ "%.2f"|format(conta.valor_restante or 0)|replace(".", ",") }}" required>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label-custom">Juros</label>
+                                            <input type="text" name="juros" class="form-control form-control-sabmec" inputmode="decimal" value="0,00">
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label-custom">Multa</label>
+                                            <input type="text" name="multa" class="form-control form-control-sabmec" inputmode="decimal" value="0,00">
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label-custom">Desconto</label>
+                                            <input type="text" name="desconto" class="form-control form-control-sabmec" inputmode="decimal" value="0,00">
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <label class="form-label-custom">Observação</label>
+                                            <textarea name="observacao" class="form-control form-control-sabmec" rows="3"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer border-secondary">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                        Cancelar
+                                    </button>
+
+                                    <button type="submit" class="btn btn-success">
+                                        Confirmar Baixa
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal do estorno -->
+                 <div class="modal fade" id="modalEstornarConta{{ conta.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark text-white border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Estornar Conta #{{ conta.id }}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <p class="mb-2">
+                                    Tem certeza que deseja estornar esta conta?
+                                </p>
+
+                                <p class="mb-2">
+                                    Cliente:
+                                    <strong>{{ conta.cliente.nome if conta.cliente else '---' }}</strong>
+                                </p>
+
+                                <p class="mb-2">
+                                    Valor pago:
+                                    <strong>R$ {{ "%.2f"|format(conta.valor_pago or 0)|replace(".", ",") }}</strong>
+                                </p>
+
+                                <p class="text-warning small mb-0">
+                                    Todas as baixas desta conta serão removidas e o status voltará para PENDENTE.
+                                </p>
+                            </div>
+
+                            <div class="modal-footer border-secondary">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                    Cancelar
+                                </button>
+
+                                <form method="POST" action="{{ url_for('contas_receber.contas_receber_estornar', id=conta.id) }}">
+                                    {% if csrf_token is defined %}
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% endif %}
+
+                                    <button type="submit" class="btn btn-warning">
+                                        Confirmar Estorno
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal de cancelar -->
+                 <div class="modal fade" id="modalCancelarConta{{ conta.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark text-white border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Cancelar Conta #{{ conta.id }}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <p class="mb-2">
+                                    Tem certeza que deseja cancelar esta conta a receber?
+                                </p>
+
+                                <p class="mb-2">
+                                    Cliente:
+                                    <strong>{{ conta.cliente.nome if conta.cliente else '---' }}</strong>
+                                </p>
+
+                                <p class="mb-2">
+                                    Valor:
+                                    <strong>R$ {{ "%.2f"|format(conta.valor or 0)|replace(".", ",") }}</strong>
+                                </p>
+
+                                <p class="text-secondary small mb-0">
+                                    Somente contas pendentes podem ser canceladas.
+                                </p>
+                            </div>
+
+                            <div class="modal-footer border-secondary">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                    Voltar
+                                </button>
+
+                                <form method="POST" action="{{ url_for('contas_receber.contas_receber_cancelar', id=conta.id) }}">
+                                    {% if csrf_token is defined %}
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% endif %}
+
+                                    <button type="submit" class="btn btn-danger">
+                                        Confirmar Cancelamento
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            {% else %}
+                <div class="col-12 text-center py-5">
+                    {% if not busca and not status_id and not data_inicio and not data_fim %}
+                        <p class="text-secondary">Digite algo ou aperte buscar para listar as contas.</p>
+                    {% else %}
+                        <p class="text-secondary">Nenhuma conta encontrada para esta busca.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+      <a href="{{ url_for('contas_receber.contas_receber_novo') }}" class="btn-flutuante">
+        <i class="bi bi-plus"></i>
+    </a>
+
+    
+{% endblock %}

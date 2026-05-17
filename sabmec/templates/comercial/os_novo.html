@@ -1,0 +1,531 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Nova Ordem de Serviço - SabMec</title>
+{% endblock %}
+
+{% block body %}
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+        <div class="container-fluid px-4 pt-3">
+            {% for categoria, mensagem in mensagens %}
+                <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                    {{ mensagem }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="container-fluid py-5 px-4">
+    <div class="content-wrapper">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('os.os') }}" class="btn btn-outline-secondary btn-sm rounded-circle">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h3 class="text-white m-0">Nova Ordem de Serviço</h3>
+        </div>
+
+        <form method="POST" action="{{ url_for('os.os_novo') }}" novalidate>
+            {{ form_os.hidden_tag() }}
+            <input type="hidden" name="aba_ativa" id="aba_ativa" value="{{ aba_ativa or 'dados' }}">
+
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {{ 'active' if aba_ativa == 'dados' else '' }}" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dados-content" type="button" role="tab">
+                        Dados da OS
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {{ 'active' if aba_ativa == 'itens' else '' }}" id="itens-tab" data-bs-toggle="tab" data-bs-target="#itens-content" type="button" role="tab">
+                        Produtos e Serviços
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {{ 'active' if aba_ativa == 'pagamento' else '' }}" id="pagamento-tab" data-bs-toggle="tab" data-bs-target="#pagamento-content" type="button" role="tab">
+                        Pagamento
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content mt-4">
+                <div class="tab-pane fade {{ 'show active' if aba_ativa == 'dados' else '' }}" id="dados-content" role="tabpanel">
+                    <div class="form-card">
+                        <div class="card-header-custom">
+                            <i class="bi bi-pencil-square"></i>
+                            <h5>Identificação</h5>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label-custom">Cliente*</label>
+
+                                <input type="hidden" name="cliente_id" id="cliente_id" value="{{ request.form.get('cliente_id', 0) }}">
+
+                                <div class="input-group">
+                                    <input
+                                        type="text"
+                                        id="cliente_busca"
+                                        class="form-control form-control-sabmec"
+                                        placeholder="Digite e pressione Enter..."
+                                        autocomplete="off"
+                                        value="{{ cliente_nome or '' }}"
+                                    >
+
+                                    <button type="button" id="btnConsultaCliente" class="btn btn-outline-info">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5">
+                                {{ form_os.veiculo_id.label(class="form-label-custom") }}
+                                {{ form_os.veiculo_id(class="form-select form-control-sabmec", id="veiculo_id") }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form_os.data_previsao.label(class="form-label-custom") }}
+                                {{ form_os.data_previsao(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-3">
+                                {{ form_os.km.label(class="form-label-custom") }}
+                                {{ form_os.km(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-12">
+                                {{ form_os.relato_cliente.label(class="form-label-custom") }}
+                                {{ form_os.relato_cliente(class="form-control form-control-sabmec", rows="3") }}
+                            </div>
+
+                            <div class="col-md-12">
+                                {{ form_os.diagnostico.label(class="form-label-custom") }}
+                                {{ form_os.diagnostico(class="form-control form-control-sabmec", rows="3") }}
+                            </div>
+
+                            <div class="col-md-12">
+                                {{ form_os.observacao.label(class="form-label-custom") }}
+                                {{ form_os.observacao(class="form-control form-control-sabmec", rows="3") }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade {{ 'show active' if aba_ativa == 'itens' else '' }}" id="itens-content" role="tabpanel">
+                    <div class="form-card">
+                        <div class="card-header-custom">
+                            <i class="bi bi-plus-lg"></i>
+                            <h5>Adicionar Item</h5>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label-custom">Item*</label>
+
+                                <input type="hidden" name="item_id" id="item_id" value="0">
+
+                                <div class="input-group">
+                                    <input
+                                        type="text"
+                                        id="item_busca"
+                                        class="form-control form-control-sabmec"
+                                        placeholder="Digite e pressione Enter..."
+                                        autocomplete="off"
+                                    >
+
+                                    <button type="button" id="btnConsultaItem" class="btn btn-outline-info">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="col-md-2">
+                                {{ form_item.tipo.label(class="form-label-custom") }}
+                                {{ form_item.tipo(class="form-select form-control-sabmec", id="tipo_item_os") }}
+                            </div>
+
+                            <div class="col-md-5">
+                                {{ form_item.descricao.label(class="form-label-custom") }}
+                                {{ form_item.descricao(class="form-control form-control-sabmec", id="descricao_item") }}
+                            </div>
+
+                            <div class="col-md-3">
+                                {{ form_item.quantidade.label(class="form-label-custom") }}
+                                {{ form_item.quantidade(class="form-control form-control-sabmec", id="quantidade_item", type="text", inputmode="decimal") }}
+                            </div>
+
+                            <div class="col-md-3">
+                                {{ form_item.valor_unitario.label(class="form-label-custom") }}
+                                {{ form_item.valor_unitario(class="form-control form-control-sabmec", id="valor_unitario_item", type="text", inputmode="decimal") }}
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label-custom">Desconto Item</label>
+                                <input type="text" name="desconto_item" id="desconto_item" class="form-control form-control-sabmec" inputmode="decimal" value="0">
+                            </div>
+
+                            <div class="col-md-3 d-flex align-items-end justify-content-end">
+                                <button type="submit" name="acao" value="adicionar_item" class="btn btn-outline-info px-4" onclick="document.getElementById('aba_ativa').value='itens'">
+                                    <i class="bi bi-plus-lg me-1"></i> Adicionar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-card mt-4">
+                        <div class="card-header-custom">
+                            <i class="bi bi-list-check"></i>
+                            <h5>Itens da OS</h5>
+                        </div>
+
+                        {% if itens_adicionados %}
+                            <div class="table-responsive">
+                                <table class="table table-dark table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Tipo</th>
+                                            <th>Descrição</th>
+                                            <th>Qtd</th>
+                                            <th>Unitário</th>
+                                            <th>Desconto</th>
+                                            <th>Total</th>
+                                            <th class="text-end">Ações</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {% for item in itens_adicionados %}
+                                            <tr>
+                                                <td>{{ item.tipo }}</td>
+                                                <td>{{ item.descricao }}</td>
+                                                <td>{{ item.quantidade }}</td>
+                                                <td>R$ {{ "%.2f"|format(item.valor_unitario|float) }}</td>
+                                                <td>R$ {{ "%.2f"|format(item.desconto|float) }}</td>
+                                                <td>R$ {{ "%.2f"|format(item.total|float) }}</td>
+                                                <td class="text-end">
+                                                    <button type="submit" name="acao" value="remover_item:{{ loop.index0 }}" class="btn btn-sm btn-outline-danger" onclick="document.getElementById('aba_ativa').value='itens'">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-secondary m-0">Nenhum produto ou serviço adicionado.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="tab-pane fade {{ 'show active' if aba_ativa == 'pagamento' else '' }}" id="pagamento-content" role="tabpanel">
+                    <div class="form-card">
+                        <div class="card-header-custom">
+                            <i class="bi bi-cash-coin"></i>
+                            <h5>Condição de Pagamento</h5>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form_pagamento.condicao_pagamento_id.label(class="form-label-custom") }}
+                                {{ form_pagamento.condicao_pagamento_id(class="form-select form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label-custom">Desconto OS</label>
+                                <input type="text" name="desconto_os" class="form-control form-control-sabmec" inputmode="decimal" value="{{ request.form.get('desconto_os', desconto or 0) }}">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label-custom">Acréscimo OS</label>
+                                <input type="text" name="acrescimo_os" class="form-control form-control-sabmec" inputmode="decimal" value="{{ request.form.get('acrescimo_os', acrescimo or 0) }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-card mt-4">
+                        <div class="card-header-custom">
+                            <i class="bi bi-calculator"></i>
+                            <h5>Resumo</h5>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="d-block text-secondary small mb-0">Produtos</label>
+                                <span class="text-white fw-bold">R$ {{ "%.2f"|format(subtotal_produtos or 0) }}</span>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="d-block text-secondary small mb-0">Serviços</label>
+                                <span class="text-white fw-bold">R$ {{ "%.2f"|format(subtotal_servicos or 0) }}</span>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="d-block text-secondary small mb-0">Desconto OS</label>
+                                <span class="text-white fw-bold">R$ {{ "%.2f"|format(desconto or 0) }}</span>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="d-block text-secondary small mb-0">Total</label>
+                                <span class="text-info fw-bold fs-5">R$ {{ "%.2f"|format(total or 0) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modalConsultaClientes" tabindex="-1">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content bg-dark text-white border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Consultar Clientes</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="d-flex gap-3 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="modal_cliente_tipo_busca" value="nome" checked>
+                                        <label class="form-check-label text-light small">Nome</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="modal_cliente_tipo_busca" value="id">
+                                        <label class="form-check-label text-light small">Código</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="modal_cliente_tipo_busca" value="documento">
+                                        <label class="form-check-label text-light small">CPF/CNPJ</label>
+                                    </div>
+                                </div>
+
+                                <input type="text" id="modal_cliente_termo" class="form-control form-control-sabmec mb-3" placeholder="Buscar cliente...">
+
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-hover align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Nome</th>
+                                                <th>CPF/CNPJ</th>
+                                                <th class="text-end">Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="clientes_tabela"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modalConsultaItens" tabindex="-1">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content bg-dark text-white border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Consultar Itens</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="d-flex gap-3 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="modal_item_tipo_busca" value="nome" checked>
+                                        <label class="form-check-label text-light small">Nome</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="modal_item_tipo_busca" value="id">
+                                        <label class="form-check-label text-light small">Código</label>
+                                    </div>
+                                </div>
+
+                                <input type="text" id="modal_item_termo" class="form-control form-control-sabmec mb-3" placeholder="Buscar item...">
+
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-hover align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Nome</th>
+                                                <th>Tipo</th>
+                                                <th>Preço</th>
+                                                <th class="text-end">Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="itens_tabela"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-5">
+                    <p class="text-secondary small m-0">A OS precisa ter pelo menos um item e valor total maior que zero.</p>
+
+                    <div class="d-flex gap-3">
+                        <a href="{{ url_for('os.os') }}" class="btn btn-outline-secondary px-4">
+                            Cancelar
+                        </a>
+
+                        <button type="submit" name="acao" value="salvar_os" class="btn px-5 py-2 fw-bold" style="background-color: #9bc8f1; color: #1a1d20; border: none; border-radius: 6px;" onclick="document.getElementById('aba_ativa').value='pagamento'">
+                            Salvar OS
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalClientes = new bootstrap.Modal(document.getElementById('modalConsultaClientes'));
+    const modalItens = new bootstrap.Modal(document.getElementById('modalConsultaItens'));
+
+    const clienteBusca = document.getElementById('cliente_busca');
+    const clienteId = document.getElementById('cliente_id');
+    const itemBusca = document.getElementById('item_busca');
+    const itemId = document.getElementById('item_id');
+
+    const btnCliente = document.getElementById('btnConsultaCliente');
+    const btnItem = document.getElementById('btnConsultaItem');
+
+    function configurarAtalhoAbertura(input, callback) {
+        input.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                event.stopPropagation();
+                callback();
+            }
+        });
+    }
+
+    configurarAtalhoAbertura(clienteBusca, abrirConsultaClientes);
+    configurarAtalhoAbertura(itemBusca, abrirConsultaItens);
+
+    btnCliente.addEventListener('click', abrirConsultaClientes);
+    btnItem.addEventListener('click', abrirConsultaItens);
+
+    document.getElementById('modal_cliente_termo').addEventListener('keydown', async function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            await buscarClientesModal();
+        }
+    });
+
+    document.getElementById('modal_item_termo').addEventListener('keydown', async function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            await buscarItensModal();
+        }
+    });
+
+    function abrirConsultaClientes() {
+        const termoInput = document.getElementById('modal_cliente_termo');
+        termoInput.value = clienteBusca.value.trim();
+        document.getElementById('clientes_tabela').innerHTML = `<tr><td colspan="4" class="text-secondary">Pressione Enter para consultar.</td></tr>`;
+        modalClientes.show();
+        setTimeout(() => { termoInput.focus(); termoInput.select(); }, 250);
+    }
+
+    function abrirConsultaItens() {
+        const termoInput = document.getElementById('modal_item_termo');
+        termoInput.value = itemBusca.value.trim();
+        document.getElementById('itens_tabela').innerHTML = `<tr><td colspan="5" class="text-secondary">Pressione Enter para consultar.</td></tr>`;
+        modalItens.show();
+        setTimeout(() => { termoInput.focus(); termoInput.select(); }, 250);
+    }
+
+    async function buscarClientesModal() {
+        const termo = document.getElementById('modal_cliente_termo').value.trim();
+        const radio = document.querySelector('input[name="modal_cliente_tipo_busca"]:checked');
+        const tipoBusca = radio ? radio.value : "nome";
+        const tabela = document.getElementById('clientes_tabela');
+
+        tabela.innerHTML = '<tr><td colspan="4" class="text-secondary">Consultando...</td></tr>';
+
+        try {
+            const response = await fetch(`/os/buscar-clientes?q=${encodeURIComponent(termo)}&tipo_busca=${tipoBusca}`);
+            const data = await response.json();
+            tabela.innerHTML = '';
+
+            if (!data.clientes || data.clientes.length === 0) {
+                tabela.innerHTML = '<tr><td colspan="4" class="text-secondary">Nenhum cliente encontrado.</td></tr>';
+                return;
+            }
+
+            data.clientes.forEach(cliente => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>#${cliente.id}</td><td>${cliente.nome}</td><td>${cliente.documento || '---'}</td><td class="text-end"><button type="button" class="btn btn-sm btn-outline-info">Selecionar</button></td>`;
+                tr.querySelector('button').addEventListener('click', function () {
+                    clienteId.value = cliente.id;
+                    clienteBusca.value = `#${cliente.id} - ${cliente.nome}`;
+                    modalClientes.hide();
+                    carregarVeiculosCliente(cliente.id);
+                });
+                tabela.appendChild(tr);
+            });
+        } catch (error) { tabela.innerHTML = '<tr><td colspan="4" class="text-danger">Erro na consulta.</td></tr>'; }
+    }
+
+    async function buscarItensModal() {
+        const termo = document.getElementById('modal_item_termo').value.trim();
+        const radio = document.querySelector('input[name="modal_item_tipo_busca"]:checked');
+        const tipoBusca = radio ? radio.value : "nome";
+        const tabela = document.getElementById('itens_tabela');
+
+        tabela.innerHTML = '<tr><td colspan="5" class="text-secondary">Consultando...</td></tr>';
+
+        try {
+            const response = await fetch(`/os/buscar-itens?q=${encodeURIComponent(termo)}&tipo_busca=${tipoBusca}`);
+            const data = await response.json();
+            tabela.innerHTML = '';
+
+            if (!data.itens || data.itens.length === 0) {
+                tabela.innerHTML = '<tr><td colspan="5" class="text-secondary">Nenhum item encontrado.</td></tr>';
+                return;
+            }
+
+            data.itens.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>#${item.id}</td><td>${item.nome}</td><td>${item.tipo}</td><td>R$ ${item.preco}</td><td class="text-end"><button type="button" class="btn btn-sm btn-outline-info">Selecionar</button></td>`;
+                tr.querySelector('button').addEventListener('click', function () {
+                    itemId.value = item.id;
+                    itemBusca.value = `#${item.id} - ${item.nome}`;
+                    document.getElementById('tipo_item_os').value = item.tipo;
+                    document.getElementById('descricao_item').value = item.nome;
+                    document.getElementById('valor_unitario_item').value = item.preco;
+                    document.getElementById('quantidade_item').value = '1';
+                    document.getElementById('desconto_item').value = '0,00';
+                    modalItens.hide();
+                });
+                tabela.appendChild(tr);
+            });
+        } catch (error) { tabela.innerHTML = '<tr><td colspan="5" class="text-danger">Erro na consulta.</td></tr>'; }
+    }
+
+    async function carregarVeiculosCliente(clienteIdSelecionado) {
+        const veiculoSelect = document.getElementById('veiculo_id');
+        veiculoSelect.innerHTML = '<option value="0">Carregando...</option>';
+        veiculoSelect.disabled = true;
+        try {
+            const response = await fetch(`/os/veiculos-por-cliente/${clienteIdSelecionado}`);
+            const data = await response.json();
+            veiculoSelect.innerHTML = '<option value="0">Selecione...</option>';
+            data.veiculos.forEach(veiculo => {
+                const option = document.createElement('option');
+                option.value = veiculo.id;
+                option.textContent = `${veiculo.placa} - ${veiculo.modelo}`;
+                veiculoSelect.appendChild(option);
+            });
+        } catch (error) { veiculoSelect.innerHTML = '<option value="0">Erro</option>'; }
+        finally { veiculoSelect.disabled = false; }
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,260 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Detalhar OS - SabMec</title>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-5 px-4">
+    <div class="content-wrapper">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('os.os') }}" class="btn btn-outline-secondary btn-sm rounded-circle">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+
+            <h3 class="text-white m-0">
+                Detalhamento da OS <span class="text-info">#{{ ordem.id }}</span>
+            </h3>
+        </div>
+
+        <div class="form-card">
+            <div class="card-header-custom">
+                <i class="bi bi-clipboard-check"></i>
+                <h5>Dados da OS</h5>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="d-block text-secondary small mb-0">Cliente</label>
+                    <span class="text-white">{{ ordem.cliente.nome if ordem.cliente else '---' }}</span>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="d-block text-secondary small mb-0">Veículo</label>
+                    <span class="text-white">
+                        {% if ordem.veiculo %}
+                            {{ ordem.veiculo.placa }} - {{ ordem.veiculo.modelo }}
+                        {% else %}
+                            ---
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="d-block text-secondary small mb-0">Abertura</label>
+                    <span class="text-white">
+                        {{ ordem.data_abertura.strftime('%d/%m/%Y') if ordem.data_abertura else '---' }}
+                    </span>
+                </div>
+
+                <div class="col-md-2">
+                    {% set situacao_os = ordem.status.situacao|trim|lower if ordem.status else '' %}
+
+                    <label class="d-block text-secondary small mb-0">Status</label>
+
+                    {% if situacao_os == 'pendente' %}
+                        <span class="badge border border-warning text-warning">
+                            {{ ordem.status.situacao }}
+                        </span>
+                    {% elif situacao_os == 'atendido' or situacao_os == 'atendida' %}
+                        <span class="badge border border-success text-success">
+                            {{ ordem.status.situacao }}
+                        </span>
+                    {% elif situacao_os == 'cancelado' or situacao_os == 'cancelada' %}
+                        <span class="badge border border-danger text-danger">
+                            {{ ordem.status.situacao }}
+                        </span>
+                    {% else %}
+                        <span class="badge border border-secondary text-secondary">
+                            {{ ordem.status.situacao if ordem.status else '---' }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-12">
+                    <label class="d-block text-secondary small mb-0">Relato do Cliente</label>
+                    <span class="text-white">{{ ordem.relato_cliente or '---' }}</span>
+                </div>
+
+                <div class="col-md-12">
+                    <label class="d-block text-secondary small mb-0">Diagnóstico</label>
+                    <span class="text-white">{{ ordem.diagnostico or '---' }}</span>
+                </div>
+
+                <div class="col-md-12">
+                    <label class="d-block text-secondary small mb-0">Observação</label>
+                    <span class="text-white">{{ ordem.observacao or '---' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-card mt-4">
+            <div class="card-header-custom">
+                <i class="bi bi-list-check"></i>
+                <h5>Produtos e Serviços</h5>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Descrição</th>
+                            <th class="text-end">Qtd</th>
+                            <th class="text-end">Unitário</th>
+                            <th class="text-end">Desconto</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for item in ordem.itens %}
+                            <tr>
+                                <td>{{ item.tipo }}</td>
+                                <td>{{ item.descricao }}</td>
+                                <td class="text-end">{{ item.quantidade }}</td>
+                                <td class="text-end">R$ {{ "%.2f"|format(item.valor_unitario or 0)|replace(".", ",") }}</td>
+                                <td class="text-end">R$ {{ "%.2f"|format(item.desconto or 0)|replace(".", ",") }}</td>
+                                <td class="text-end">R$ {{ "%.2f"|format(item.total or 0)|replace(".", ",") }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-secondary py-4">
+                                    Nenhum item encontrado.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="form-card mt-4">
+            <div class="card-header-custom">
+                <i class="bi bi-calculator"></i>
+                <h5>Totais da OS</h5>
+            </div>
+
+            <div class="row g-3 text-center">
+                <div class="col-md-3">
+                    <label class="d-block text-secondary small mb-0">Produtos</label>
+                    <span class="text-white fw-bold">
+                        R$ {{ "%.2f"|format(ordem.subtotal_produtos or 0)|replace(".", ",") }}
+                    </span>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="d-block text-secondary small mb-0">Serviços</label>
+                    <span class="text-white fw-bold">
+                        R$ {{ "%.2f"|format(ordem.subtotal_servicos or 0)|replace(".", ",") }}
+                    </span>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="d-block text-secondary small mb-0">Desconto / Acréscimo</label>
+                    <span class="text-white fw-bold">
+                        R$ {{ "%.2f"|format((ordem.acrescimo or 0) - (ordem.desconto or 0))|replace(".", ",") }}
+                    </span>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="d-block text-secondary small mb-0">Total</label>
+                    <span class="text-info fw-bold fs-5">
+                        R$ {{ "%.2f"|format(ordem.total or 0)|replace(".", ",") }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-card mt-4">
+            <div class="card-header-custom">
+                <i class="bi bi-cash-coin"></i>
+                <h5>Contas a Receber Geradas</h5>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Conta</th>
+                            <th>Parcela</th>
+                            <th>Status</th>
+                            <th>Vencimento</th>
+                            <th class="text-end">Valor</th>
+                            <th class="text-end">Pago</th>
+                            <th class="text-end">Restante</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for conta in contas_receber %}
+                            {% set situacao = conta.status_situacao|trim|lower if conta.status_situacao else '' %}
+
+                            <tr>
+                                <td>#{{ conta.id }}</td>
+                                <td>{{ conta.parcela or '---' }}</td>
+
+                                <td>
+                                    {% if situacao == 'pendente' %}
+                                        <span class="badge border border-warning text-warning">
+                                            {{ conta.status_situacao }}
+                                        </span>
+                                    {% elif situacao == 'atendido' or situacao == 'atendida' or situacao == 'pago' or situacao == 'paga' %}
+                                        <span class="badge border border-success text-success">
+                                            {{ conta.status_situacao }}
+                                        </span>
+                                    {% elif situacao == 'cancelado' or situacao == 'cancelada' %}
+                                        <span class="badge border border-danger text-danger">
+                                            {{ conta.status_situacao }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge border border-secondary text-secondary">
+                                            {{ conta.status_situacao or '---' }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>{{ conta.vencimento.strftime('%d/%m/%Y') if conta.vencimento else '---' }}</td>
+                                <td class="text-end">R$ {{ "%.2f"|format(conta.valor or 0)|replace(".", ",") }}</td>
+                                <td class="text-end text-success">R$ {{ "%.2f"|format(conta.valor_pago or 0)|replace(".", ",") }}</td>
+                                <td class="text-end text-warning">R$ {{ "%.2f"|format(conta.valor_restante or 0)|replace(".", ",") }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-secondary py-4">
+                                    Nenhuma conta a receber foi gerada para esta OS.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row g-3 text-center mt-4">
+                <div class="col-md-4">
+                    <label class="d-block text-secondary small mb-0">Total Faturado</label>
+                    <span class="text-white fw-bold">
+                        R$ {{ "%.2f"|format(total_receber or 0)|replace(".", ",") }}
+                    </span>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="d-block text-secondary small mb-0">Total Pago</label>
+                    <span class="text-success fw-bold">
+                        R$ {{ "%.2f"|format(total_pago or 0)|replace(".", ",") }}
+                    </span>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="d-block text-secondary small mb-0">Total Restante</label>
+                    <span class="text-warning fw-bold">
+                        R$ {{ "%.2f"|format(total_restante or 0)|replace(".", ",") }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

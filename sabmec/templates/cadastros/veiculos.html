@@ -1,0 +1,134 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Cadastro de Veículos - SabMec</title>
+{% endblock %}
+
+{% block body %}
+    {% set action_url = url_for('veiculos.veiculos') %}
+    {% set placeholder = 'Buscar por placa, modelo, proprietário ou código...' %}
+    {% set tipo_pessoa = False %}
+    {% set tipo_item = False %}
+    {% set tipo_veiculo = True %}
+
+    {% include 'bars/navbar.html' %}
+
+    <div class="container-fluid px-4 mt-3">
+        <div class="row">
+            {% for veiculo in veiculos %}
+                <div class="col-12">
+                    <div class="card card-linha bg-dark border-secondary text-light shadow-sm">
+                        <div class="card-body d-flex align-items-center py-3">
+
+                            <div class="info-principal">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-info text-dark">#{{ veiculo.id }}</span>
+                                    <h5 class="mb-0 fw-bold text-truncate">
+                                        {{ veiculo.placa }} - {{ veiculo.modelo }}
+                                    </h5>
+                                </div>
+
+                                <div class="d-flex gap-1">
+                                    <span class="badge border border-info text-info" style="font-size: 0.6rem;">
+                                        {{ veiculo.marca }}
+                                    </span>
+
+                                    {% if veiculo.ativo %}
+                                        <span class="badge border border-success text-success" style="font-size: 0.6rem;">ATIVO</span>
+                                    {% else %}
+                                        <span class="badge border border-secondary text-secondary" style="font-size: 0.6rem;">INATIVO</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="flex-grow-1 d-flex flex-wrap gap-4 align-items-center">
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Proprietário</label>
+                                    <span class="small">
+                                        {{ veiculo.pessoa.nome if veiculo.pessoa else '---' }}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Ano</label>
+                                    <span class="small">
+                                        {% if veiculo.ano_fabricacao or veiculo.ano_modelo %}
+                                            {{ veiculo.ano_fabricacao or '---' }}/{{ veiculo.ano_modelo or '---' }}
+                                        {% else %}
+                                            ---
+                                        {% endif %}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Cor</label>
+                                    <span class="small">{{ veiculo.cor or '---' }}</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 ms-5">
+                                <a href="{{ url_for('veiculos.veiculos_editar', id=veiculo.id) }}" class="btn btn-outline-light btn-sm px-3 me-2">
+                                    <i class="bi bi-pencil"></i>
+                                    <span class="d-none d-md-inline ms-1">Editar</span>
+                                </a>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalExcluirVeiculo{{ veiculo.id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modalExcluirVeiculo{{ veiculo.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark text-white border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Excluir veículo</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <p class="mb-2">
+                                    Tem certeza que deseja excluir <strong>{{ veiculo.placa }} - {{ veiculo.modelo }}</strong>?
+                                </p>
+
+                                <p class="text-secondary small mb-0">
+                                    Se este veículo possuir vínculos no sistema, ele não será excluído. O veículo será apenas inativado.
+                                </p>
+                            </div>
+
+                            <div class="modal-footer border-secondary">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                    Cancelar
+                                </button>
+
+                                <form method="POST" action="{{ url_for('veiculos.veiculos_excluir', id=veiculo.id) }}">
+                                    {% if csrf_token is defined %}
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% endif %}
+
+                                    <button type="submit" class="btn btn-danger">
+                                        Confirmar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12 text-center py-5">
+                    {% if not busca and not status %}
+                        <p class="text-secondary">Digite algo ou aperte buscar para listar os veículos.</p>
+                    {% else %}
+                        <p class="text-secondary">Nenhum veículo encontrado para esta busca.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <a href="{{ url_for('veiculos.veiculos_novo') }}" class="btn-flutuante">
+        <i class="bi bi-plus-lg"></i>
+    </a>
+{% endblock %}

@@ -1,0 +1,208 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Editar Condição de Pagamento - SabMec</title>
+{% endblock %}
+
+{% block body %}
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+        <div class="container-fluid px-4 pt-3">
+            {% for categoria, mensagem in mensagens %}
+                <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                    {{ mensagem }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="container-fluid py-5 px-4">
+    <div class="content-wrapper">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('condicao.condicao_pgto') }}" class="btn btn-outline-secondary btn-sm rounded-circle">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+
+            <h3 class="text-white m-0">
+                Editar Condição:
+                <span class="text-info">{{ condicao.nome }}</span>
+            </h3>
+
+            <span class="badge bg-dark border border-secondary text-secondary">ID #{{ condicao.id }}</span>
+        </div>
+
+        <form method="POST" action="{{ url_for('condicao.condicoes_pagamento_editar', id=condicao.id) }}" novalidate>
+            <div class="form-card">
+                <div class="card-header-custom">
+                    <i class="bi bi-cash-coin"></i>
+                    <h5>Dados da Condição</h5>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Nome*</label>
+                        <input type="text" name="nome" class="form-control form-control-sabmec" value="{{ condicao.nome or '' }}">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Descrição</label>
+                        <input type="text" name="descricao" class="form-control form-control-sabmec" value="{{ condicao.descricao or '' }}">
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="ativo" id="ativo" {% if condicao.ativo %}checked{% endif %}>
+                            <label class="form-check-label text-white" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-card mt-4">
+                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-list-ol"></i>
+                        <h5>Parcelas</h5>
+                    </div>
+
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="adicionarParcela()">
+                        <i class="bi bi-plus-lg me-1"></i> Adicionar Parcela
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">Parcela</th>
+                                <th style="width: 25%;">Dias</th>
+                                <th style="width: 35%;">Percentual</th>
+                                <th class="text-end" style="width: 20%;">Ações</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="parcelasTabela">
+                            {% for parcela in condicao.parcelas %}
+                                <tr>
+                                    <td>
+                                        <input type="number" name="parcela_numero[]" class="form-control form-control-sabmec" value="{{ parcela.numero }}">
+                                    </td>
+
+                                    <td>
+                                        <input type="number" name="parcela_dias[]" class="form-control form-control-sabmec" value="{{ parcela.dias }}">
+                                    </td>
+
+                                    <td>
+                                        <input type="text" name="parcela_percentual[]" class="form-control form-control-sabmec" inputmode="decimal" value="{{ parcela.percentual }}">
+                                    </td>
+
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerParcela(this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td>
+                                        <input type="number" name="parcela_numero[]" class="form-control form-control-sabmec" value="1">
+                                    </td>
+
+                                    <td>
+                                        <input type="number" name="parcela_dias[]" class="form-control form-control-sabmec" value="0">
+                                    </td>
+
+                                    <td>
+                                        <input type="text" name="parcela_percentual[]" class="form-control form-control-sabmec" inputmode="decimal" value="100">
+                                    </td>
+
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerParcela(this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="text-secondary small mb-0">
+                    A soma dos percentuais deve ser 100%.
+                </p>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-5">
+                <p class="text-secondary small m-0">* Campos obrigatórios.</p>
+
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('condicao.condicao_pgto') }}" class="btn btn-outline-secondary px-4">
+                        Cancelar
+                    </a>
+
+                    <button type="submit" class="btn px-5 py-2 fw-bold" style="background-color: #9bc8f1; color: #1a1d20; border: none; border-radius: 6px;">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function adicionarParcela() {
+        const tabela = document.getElementById('parcelasTabela');
+        const quantidadeLinhas = tabela.querySelectorAll('tr').length;
+        const proximoNumero = quantidadeLinhas + 1;
+
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+            <td>
+                <input type="number" name="parcela_numero[]" class="form-control form-control-sabmec" value="${proximoNumero}">
+            </td>
+
+            <td>
+                <input type="number" name="parcela_dias[]" class="form-control form-control-sabmec" value="0">
+            </td>
+
+            <td>
+                <input type="text" name="parcela_percentual[]" class="form-control form-control-sabmec" inputmode="decimal" value="0">
+            </td>
+
+            <td class="text-end">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerParcela(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+
+        tabela.appendChild(tr);
+    }
+
+    function removerParcela(botao) {
+        const tabela = document.getElementById('parcelasTabela');
+
+        if (tabela.querySelectorAll('tr').length <= 1) {
+            return;
+        }
+
+        botao.closest('tr').remove();
+        renumerarParcelas();
+    }
+
+    function renumerarParcelas() {
+        const linhas = document.querySelectorAll('#parcelasTabela tr');
+
+        linhas.forEach(function (linha, index) {
+            const campoNumero = linha.querySelector('input[name="parcela_numero[]"]');
+
+            if (campoNumero) {
+                campoNumero.value = index + 1;
+            }
+        });
+    }
+</script>
+{% endblock %}

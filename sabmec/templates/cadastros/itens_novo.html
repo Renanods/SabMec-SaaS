@@ -1,0 +1,131 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Novo Item - SabMec</title>
+{% endblock %}
+
+{% block body %}
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+        <div class="container-fluid px-4 pt-3">
+            {% for categoria, mensagem in mensagens %}
+                <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                    {{ mensagem }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="container-fluid py-5 px-4">
+    <div class="content-wrapper">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('itens.itens') }}" class="btn btn-outline-secondary btn-sm rounded-circle">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h3 class="text-white m-0">Cadastrar Novo Item</h3>
+        </div>
+
+        <form method="POST" action="{{ url_for('itens.itens_novo') }}" novalidate>
+            {{ form_item.hidden_tag() }}
+
+            <div class="form-card">
+                <div class="card-header-custom">
+                    <i class="bi bi-box-seam"></i>
+                    <h5>Dados do Item</h5>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        {{ form_item.nome.label(class="form-label-custom") }}
+                        {{ form_item.nome(class="form-control form-control-sabmec") }}
+                    </div>
+
+                    <div class="col-md-3">
+                        {{ form_item.preco.label(class="form-label-custom") }}
+                        {{ form_item.preco(class="form-control form-control-sabmec", placeholder="0,00") }}
+                    </div>
+
+                    <div class="col-md-2">
+                        {{ form_item.tipo.label(class="form-label-custom") }}
+                        {{ form_item.tipo(class="form-select form-control-sabmec", id="tipoItem", onchange="toggleTipoItem()") }}
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            {{ form_item.ativo(class="form-check-input", id="ativo") }}
+                            <label class="form-check-label text-white" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="blocoProduto" class="form-card mt-4">
+                <div class="card-header-custom">
+                    <i class="bi bi-box"></i>
+                    <h5>Dados do Produto</h5>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        {{ form_produto.custo.label(class="form-label-custom") }}
+                        {{ form_produto.custo(class="form-control form-control-sabmec", placeholder="0,00") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form_produto.estoque.label(class="form-label-custom") }}
+                        {{ form_produto.estoque(class="form-control form-control-sabmec") }}
+                    </div>
+                </div>
+            </div>
+
+            <div id="blocoServico" class="form-card mt-4" style="display: none;">
+                <div class="card-header-custom">
+                    <i class="bi bi-tools"></i>
+                    <h5>Dados do Serviço</h5>
+                </div>
+
+                <p class="text-secondary small m-0">
+                    Serviço não controla custo nem estoque.
+                </p>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-5">
+                <p class="text-secondary small m-0">* Campos obrigatórios.</p>
+
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('itens.itens') }}" class="btn btn-outline-secondary px-4">
+                        Cancelar
+                    </a>
+
+                    <button type="submit" class="btn px-5 py-2 fw-bold" style="background-color: #9bc8f1; color: #1a1d20; border: none; border-radius: 6px;">
+                        Salvar Item
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleTipoItem() {
+        const tipoItem = document.getElementById('tipoItem');
+        const blocoProduto = document.getElementById('blocoProduto');
+        const blocoServico = document.getElementById('blocoServico');
+
+        if (tipoItem.value === 'Produto') {
+            blocoProduto.style.display = 'block';
+            blocoServico.style.display = 'none';
+        } else {
+            blocoProduto.style.display = 'none';
+            blocoServico.style.display = 'block';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleTipoItem();
+    });
+</script>
+{% endblock %}

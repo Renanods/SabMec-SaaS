@@ -1,0 +1,176 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+<nav class="grade-navbar mb-4">
+    <form method="GET" action="{{ action_url }}">
+        <input type="hidden" name="pesquisar" value="1">
+
+        <div class="row g-3 align-items-end">
+            <div class="col-md">
+                <label class="label-filter">
+                    {% if os %}
+                        Cliente
+                    {% elif financeiro %}
+                        Conta a receber
+                    {% else %}
+                        Pessoa
+                    {% endif %}
+                </label>
+
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-secondary" style="border-color: #3d4246 !important;">
+                        <i class="bi bi-search"></i>
+                    </span>
+
+                    <input
+                        type="text"
+                        name="busca"
+                        class="form-control form-control-custom"
+                        placeholder="{{ placeholder }}"
+                        value="{{ busca or '' }}"
+                    >
+                </div>
+            </div>
+
+            {% if calendario %}
+                <div class="col-md-2" style="max-width: 180px;">
+                    <label class="label-filter">De:</label>
+                    <input
+                        type="date"
+                        name="data_inicio"
+                        class="form-control form-control-custom"
+                        value="{{ data_inicio or '' }}"
+                    >
+                </div>
+
+                <div class="col-md-2" style="max-width: 180px;">
+                    <label class="label-filter">Até:</label>
+                    <input
+                        type="date"
+                        name="data_fim"
+                        class="form-control form-control-custom"
+                        value="{{ data_fim or '' }}"
+                    >
+                </div>
+            {% endif %}
+
+            <div class="col-md-auto d-flex gap-2">
+                <button type="submit" class="btn btn-outline-light px-4 fw-bold" style="height: 45px;">
+                    Buscar
+                </button>
+            </div>
+        </div>
+
+        {% if os or status or financeiro %}
+            <div class="row g-3 align-items-end mt-1">
+                {% if os %}
+                    <div class="col-md-2" style="min-width: 140px;">
+                        <label class="label-filter">Número da OS</label>
+
+                        <input
+                            type="text"
+                            name="numero_os"
+                            class="form-control form-control-custom"
+                            placeholder="OS..."
+                            value="{{ numero_os or '' }}"
+                        >
+                    </div>
+
+                    <div class="col-md-2" style="min-width: 150px;">
+                        <label class="label-filter">Placa do veículo</label>
+
+                        <input
+                            type="text"
+                            name="placa"
+                            class="form-control form-control-custom"
+                            placeholder="Placa..."
+                            value="{{ placa or '' }}"
+                        >
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="label-filter">Buscar cliente por</label>
+
+                        <div class="d-flex gap-3 mt-1">
+                            {% set is_nome = 'checked' if (tipo_busca == 'nome' or not tipo_busca) else '' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_busca" value="nome" {{ is_nome }}>
+                                <label class="form-check-label text-light small">Nome</label>
+                            </div>
+
+                            {% set is_cpf = 'checked' if tipo_busca == 'cpf' else '' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_busca" value="cpf" {{ is_cpf }}>
+                                <label class="form-check-label text-light small">CPF/CNPJ</label>
+                            </div>
+
+                            {% set is_veiculo = 'checked' if tipo_busca == 'veiculo' else '' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_busca" value="veiculo" {{ is_veiculo }}>
+                                <label class="form-check-label text-light small">Veículo</label>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if financeiro %}
+                    <div class="col-md-3" style="min-width: 220px;">
+                        <label class="label-filter">Origem</label>
+
+                        <select name="origem" class="form-select form-control-custom">
+                            <option value="" {{ 'selected' if not origem else '' }}>Todas</option>
+                            <option value="OS" {{ 'selected' if origem == 'OS' else '' }}>Ordem de Serviço</option>
+                            <option value="VENDA" {{ 'selected' if origem == 'VENDA' else '' }}>Venda</option>
+                            <option value="AVULSO" {{ 'selected' if origem == 'AVULSO' else '' }}>Avulso</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-5">
+                        <label class="label-filter">Buscar por</label>
+
+                        <div class="d-flex gap-3 mt-1 flex-wrap">
+                            {% set is_cliente = 'checked' if (tipo_busca == 'cliente' or not tipo_busca) else '' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_busca" value="cliente" {{ is_cliente }}>
+                                <label class="form-check-label text-light small">Cliente</label>
+                            </div>
+
+                            {% set is_descricao = 'checked' if tipo_busca == 'descricao' else '' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_busca" value="descricao" {{ is_descricao }}>
+                                <label class="form-check-label text-light small">Descrição</label>
+                            </div>
+
+                            {% set is_referencia = 'checked' if tipo_busca == 'referencia' else '' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_busca" value="referencia" {{ is_referencia }}>
+                                <label class="form-check-label text-light small">Identificador</label>
+                            </div>
+
+                            {% set is_documento = 'checked' if tipo_busca == 'documento' else '' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_busca" value="documento" {{ is_documento }}>
+                                <label class="form-check-label text-light small">CPF/CNPJ</label>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if status %}
+                    <div class="col-md-2" style="min-width: 180px;">
+                        <label class="label-filter">Status</label>
+
+                        <select name="status_id" class="form-select form-control-custom">
+                            <option value="" {{ 'selected' if not status_id else '' }}>Todos os Status</option>
+
+                            {% for status_item in status_lista %}
+                                <option value="{{ status_item.id }}" {{ 'selected' if status_id == status_item.id else '' }}>
+                                    {{ status_item.situacao }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </form>
+</nav>

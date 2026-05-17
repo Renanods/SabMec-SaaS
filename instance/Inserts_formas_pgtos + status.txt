@@ -1,0 +1,31 @@
+INSERT INTO formas_pagamento (id, nome, codigo_tpag, ativo) VALUES
+(1,  'Dinheiro',                                      '01', 1),
+(2,  'Cheque',                                        '02', 1),
+(3,  'Cartão de Crédito',                             '03', 1),
+(4,  'Cartão de Débito',                              '04', 1),
+(5,  'Crediario',                                     '05', 1),
+(10, 'Vale Alimentação',                              '10', 0),
+(11, 'Vale Refeição',                                 '11', 0),
+(12, 'Vale Presente',                                 '12', 0),
+(13, 'Vale Combustível',                              '13', 0),
+(15, 'Boleto Bancário',                               '15', 1),
+(16, 'Depósito Bancário',                             '16', 0),
+(17, 'Pagamento Instantâneo (PIX)',                   '17', 1),
+(18, 'Transferência Bancária / Book Transfer',        '18', 0),
+(19, 'Programa de Fidelidade / Cashback',             '19', 0),
+(90, 'Sem Pagamento',                                 '90', 0),
+(99, 'Outros',                                        '99', 0);
+
+=====
+
+INSERT INTO status (id, situacao) VALUES
+(1, 'PENDENTE'),
+(2, 'ATENDIDO'),
+(3, 'CANCELADO'),
+(4, 'AUTORIZADA'),
+(5, 'DIGITACAO')
+
+
+
+
+

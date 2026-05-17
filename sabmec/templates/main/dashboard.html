@@ -1,0 +1,303 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Dashboard - SabMec</title>
+
+    <style>
+        .dashboard-container {
+            padding: 30px 24px 48px;
+        }
+
+        .dashboard-title {
+            margin-bottom: 22px;
+        }
+
+        .dash-card {
+            background: #212529;
+            border: 1px solid #343a40;
+            border-radius: 8px;
+            padding: 20px;
+            height: 100%;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+        }
+
+        .dash-label {
+            color: #8b949e;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: .04em;
+            margin-bottom: 8px;
+        }
+
+        .dash-value {
+            font-size: 1.8rem;
+            line-height: 1.15;
+            font-weight: 800;
+            color: #9bc8f1;
+        }
+
+        .dash-subtitle {
+            color: #8b949e;
+            font-size: .82rem;
+            margin-top: 8px;
+        }
+
+        .dash-section-title {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dash-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(155, 200, 241, 0.12);
+            color: #9bc8f1;
+        }
+
+        .dash-table th {
+            color: #7f8892;
+            font-size: .72rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            border-bottom: 1px solid #343a40 !important;
+        }
+
+        .dash-table td {
+            border-color: #2f3438 !important;
+            vertical-align: middle;
+        }
+
+        .muted-line {
+            color: #7f8892;
+            font-size: .82rem;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid dashboard-container">
+
+    <div class="dashboard-title">
+        <h2 class="text-white m-0">Dashboard</h2>
+        <div class="muted-line">Resumo operacional e financeiro da oficina.</div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="dash-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="dash-label">Ordens Abertas</div>
+                        <div class="dash-value">{{ ordens_abertas }}</div>
+                    </div>
+                    <div class="dash-icon">
+                        <i class="bi bi-tools"></i>
+                    </div>
+                </div>
+                <div class="dash-subtitle">OS com status pendente</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="dash-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="dash-label">Cliente do Mês</div>
+                        <div class="dash-value" style="font-size: 1.05rem;">
+                            {{ cliente_top_nome }}
+                        </div>
+                    </div>
+                    <div class="dash-icon">
+                        <i class="bi bi-person-check"></i>
+                    </div>
+                </div>
+                <div class="dash-subtitle">{{ cliente_top_total }} OS atendidas neste mês</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="dash-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="dash-label">OS Atendidas no Mês</div>
+                        <div class="dash-value">{{ ordens_fechadas_mes }}</div>
+                    </div>
+                    <div class="dash-icon">
+                        <i class="bi bi-check2-circle"></i>
+                    </div>
+                </div>
+                <div class="dash-subtitle">Ordens com status atendido</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="dash-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="dash-label">Faturamento do Mês</div>
+                        <div class="dash-value">
+                            R$ {{ "%.2f"|format(faturamento_mes or 0)|replace(".", ",") }}
+                        </div>
+                    </div>
+                    <div class="dash-icon">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                </div>
+                <div class="dash-subtitle">Contas atendidas este mês</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-2">
+        <div class="col-lg-8">
+            <div class="dash-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="dash-section-title">
+                        <i class="bi bi-clock-history text-info"></i>
+                        Últimas Ordens
+                    </h5>
+
+                    <a href="{{ url_for('os.os', pesquisar=1) }}" class="btn btn-sm btn-outline-light">
+                        Ver todas
+                    </a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle dash-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>OS</th>
+                                <th>Cliente</th>
+                                <th>Veículo</th>
+                                <th>Status</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Ação</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for ordem in ultimas_ordens %}
+                                {% set situacao = ordem.status.situacao|trim|lower if ordem.status else '' %}
+
+                                <tr>
+                                    <td>#{{ ordem.id }}</td>
+
+                                    <td>{{ ordem.cliente.nome if ordem.cliente else '---' }}</td>
+
+                                    <td>
+                                        {% if ordem.veiculo %}
+                                            {{ ordem.veiculo.placa }} - {{ ordem.veiculo.modelo }}
+                                        {% else %}
+                                            ---
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if situacao == 'pendente' %}
+                                            <span class="badge border border-warning text-warning">{{ ordem.status.situacao }}</span>
+                                        {% elif situacao == 'atendido' or situacao == 'atendida' %}
+                                            <span class="badge border border-success text-success">{{ ordem.status.situacao }}</span>
+                                        {% elif situacao == 'cancelado' or situacao == 'cancelada' %}
+                                            <span class="badge border border-danger text-danger">{{ ordem.status.situacao }}</span>
+                                        {% else %}
+                                            <span class="badge border border-secondary text-secondary">{{ ordem.status.situacao if ordem.status else '---' }}</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-end">
+                                        R$ {{ "%.2f"|format(ordem.total or 0)|replace(".", ",") }}
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a href="{{ url_for('os.os_detalhar', id=ordem.id) }}" class="btn btn-sm btn-outline-info">
+                                            Detalhar
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-secondary py-4">
+                                        Nenhuma ordem encontrada.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="dash-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="dash-section-title">
+                        <i class="bi bi-calendar2-week text-info"></i>
+                        Recebimentos
+                    </h5>
+
+                    <a href="{{ url_for('contas_receber.contas_receber', pesquisar=1) }}" class="btn btn-sm btn-outline-light">
+                        Ver
+                    </a>
+                </div>
+
+                {% for conta in contas_vencendo %}
+                    {% set situacao_conta = conta.status_situacao|trim|lower if conta.status_situacao else '' %}
+                    {% set conta_cancelada = situacao_conta == 'cancelado' or situacao_conta == 'cancelada' %}
+                    {% set conta_atendida = situacao_conta == 'atendido' or situacao_conta == 'atendida' or situacao_conta == 'pago' or situacao_conta == 'paga' %}
+
+                    {% if not conta_cancelada %}
+                        <div class="d-flex justify-content-between align-items-center py-3 border-bottom border-secondary border-opacity-25">
+                            <div>
+                                <div class="text-white fw-semibold">
+                                    #{{ conta.id }} - {{ conta.cliente.nome if conta.cliente else '---' }}
+                                </div>
+
+                                <div class="muted-line">
+                                    {{ conta.vencimento.strftime('%d/%m/%Y') if conta.vencimento else '---' }}
+                                    {% if conta.parcela %}
+                                        | {{ conta.parcela }}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <div class="{{ 'text-success' if conta_atendida else 'text-warning' }} fw-bold">
+                                    {% if conta_atendida %}
+                                        R$ {{ "%.2f"|format(conta.valor or 0)|replace(".", ",") }}
+                                    {% else %}
+                                        R$ {{ "%.2f"|format(conta.valor_restante or 0)|replace(".", ",") }}
+                                    {% endif %}
+                                </div>
+
+                                {% if situacao_conta == 'pendente' %}
+                                    <span class="badge border border-warning text-warning">Pendente</span>
+                                {% elif conta_atendida %}
+                                    <span class="badge border border-success text-success">Atendido</span>
+                                {% else %}
+                                    <span class="badge border border-secondary text-secondary">{{ conta.status_situacao or '---' }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center text-secondary py-4">
+                        Nenhum recebimento encontrado.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

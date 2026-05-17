@@ -1,0 +1,368 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Novo Cadastro - SabMec</title>
+{% endblock %}
+
+{% block body %}
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+        <div class="container-fluid px-4 pt-3">
+            {% for categoria, mensagem in mensagens %}
+                <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                    {{ mensagem }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+<div class="container-fluid py-5 px-4">
+    <div class="content-wrapper">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('pessoas.pessoas') }}" class="btn btn-outline-secondary btn-sm rounded-circle">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h3 class="text-white m-0">Cadastrar Nova Pessoa</h3>
+        </div>
+
+        <form method="POST" action="{{ url_for('pessoas.pessoas_novo') }}" novalidate>
+            {{ form_pessoa.hidden_tag() }}
+
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dados-content" type="button" role="tab">
+                        Dados e Contatos
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="endereco-tab" data-bs-toggle="tab" data-bs-target="#endereco-content" type="button" role="tab">
+                        Endereço
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation" id="clienteTabItem">
+                    <button class="nav-link" id="cliente-tab" data-bs-toggle="tab" data-bs-target="#cliente-content" type="button" role="tab">
+                        Cliente
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation" id="fornecedorTabItem">
+                    <button class="nav-link" id="fornecedor-tab" data-bs-toggle="tab" data-bs-target="#fornecedor-content" type="button" role="tab">
+                        Fornecedor
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation" id="usuarioTabItem">
+                    <button class="nav-link" id="usuario-tab" data-bs-toggle="tab" data-bs-target="#usuario-content" type="button" role="tab">
+                        Usuário
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content mt-4">
+                <div class="tab-pane fade show active" id="dados-content" role="tabpanel">
+                    <div class="form-card">
+                        <div class="card-header-custom">
+                            <i class="bi bi-person-vcard"></i>
+                            <h5>Identificação</h5>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                {{ form_pessoa.nome.label(class="form-label-custom") }}
+                                {{ form_pessoa.nome(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-4">
+                                {{ form_pessoa.documento_fiscal.label(class="form-label-custom") }}
+                                {{ form_pessoa.documento_fiscal(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-8">
+                                {{ form_pessoa.nome_fantasia.label(class="form-label-custom") }}
+                                {{ form_pessoa.nome_fantasia(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-4">
+                                {{ form_pessoa.ie_rg.label(class="form-label-custom") }}
+                                {{ form_pessoa.ie_rg(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-3">
+                                {{ form_pessoa.entidade.label(class="form-label-custom") }}
+                                {{ form_pessoa.entidade(class="form-select form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-9">
+                                <label class="form-label-custom mb-3">Vínculo do Cadastro</label>
+
+                                <div class="d-flex gap-4">
+                                    <div class="form-check">
+                                        {{ form_pessoa.eh_cliente(class="form-check-input", id="tipoCliente", onchange="toggleVinculosCadastro()") }}
+                                        <label class="form-check-label text-white" for="tipoCliente">Cliente</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        {{ form_pessoa.eh_fornecedor(class="form-check-input", id="tipoFornecedor", onchange="toggleVinculosCadastro()") }}
+                                        <label class="form-check-label text-white" for="tipoFornecedor">Fornecedor</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        {{ form_pessoa.eh_usuario(class="form-check-input", id="tipoUsuario", onchange="toggleVinculosCadastro()") }}
+                                        <label class="form-check-label text-white" for="tipoUsuario">Usuário</label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        {{ form_pessoa.ativo(class="form-check-input", id="ativo") }}
+                                        <label class="form-check-label text-white" for="ativo">Ativo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-card">
+                        <div class="card-header-custom">
+                            <i class="bi bi-telephone"></i>
+                            <h5>Contato Principal</h5>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                {{ form_contato.tipo.label(class="form-label-custom") }}
+                                {{ form_contato.tipo(class="form-select form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-8">
+                                {{ form_contato.valor.label(class="form-label-custom") }}
+                                {{ form_contato.valor(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    {{ form_contato.principal(class="form-check-input", id="contatoPrincipal") }}
+                                    <label class="form-check-label text-white" for="contatoPrincipal">Contato principal</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="endereco-content" role="tabpanel">
+                    <div class="form-card">
+                        <div class="card-header-custom d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-geo-alt"></i>
+                                <h5>Endereço Principal</h5>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                {{ form_endereco.cep.label(class="form-label-custom") }}
+                                {{ form_endereco.cep(class="form-control form-control-sabmec", placeholder="00000-000") }}
+                            </div>
+
+                            <div class="col-md-9">
+                                {{ form_endereco.logradouro.label(class="form-label-custom") }}
+                                {{ form_endereco.logradouro(class="form-control form-control-sabmec", placeholder="Rua, Avenida...") }}
+                            </div>
+
+                            <div class="col-md-3">
+                                {{ form_endereco.numero.label(class="form-label-custom") }}
+                                {{ form_endereco.numero(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-4">
+                                {{ form_endereco.bairro.label(class="form-label-custom") }}
+                                {{ form_endereco.bairro(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-5">
+                                {{ form_endereco.complemento.label(class="form-label-custom") }}
+                                {{ form_endereco.complemento(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-4">
+                                {{ form_endereco.estado_id.label(class="form-label-custom") }}
+                                {{ form_endereco.estado_id(class="form-select form-control-sabmec", id="estado_id") }}
+                            </div>
+
+                            <div class="col-md-8">
+                                {{ form_endereco.cidade_id.label(class="form-label-custom") }}
+                                {{ form_endereco.cidade_id(class="form-select form-control-sabmec", id="cidade_id") }}
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    {{ form_endereco.principal(class="form-check-input", id="enderecoPrincipal") }}
+                                    <label class="form-check-label text-white" for="enderecoPrincipal">Endereço principal</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="cliente-content" role="tabpanel">
+                    <div id="blocoCliente" class="form-card" style="display: none; border-left: 4px solid #9bc8f1;">
+                        <div class="card-header-custom">
+                            <i class="bi bi-person-check"></i>
+                            <h5>Dados do Cliente</h5>
+                        </div>
+
+                        <div class="form-check">
+                            {{ form_cliente.cliente_ativo(class="form-check-input", id="clienteAtivo") }}
+                            <label class="form-check-label text-white" for="clienteAtivo">Cliente ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="fornecedor-content" role="tabpanel">
+                    <div id="blocoFornecedor" class="form-card" style="display: none; border-left: 4px solid #9bc8f1;">
+                        <div class="card-header-custom">
+                            <i class="bi bi-truck"></i>
+                            <h5>Dados do Fornecedor</h5>
+                        </div>
+
+                        <div class="form-check">
+                            {{ form_fornecedor.fornecedor_ativo(class="form-check-input", id="fornecedorAtivo") }}
+                            <label class="form-check-label text-white" for="fornecedorAtivo">Fornecedor ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="usuario-content" role="tabpanel">
+                    <div id="blocoUsuario" class="form-card" style="display: none; border-left: 4px solid #9bc8f1;">
+                        <div class="card-header-custom">
+                            <i class="bi bi-shield-lock"></i>
+                            <h5>Acesso</h5>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form_usuario.usuario.label(class="form-label-custom") }}
+                                {{ form_usuario.usuario(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-6">
+                                {{ form_usuario.senha.label(class="form-label-custom") }}
+                                {{ form_usuario.senha(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-6">
+                                {{ form_usuario.confirmar_senha.label(class="form-label-custom") }}
+                                {{ form_usuario.confirmar_senha(class="form-control form-control-sabmec") }}
+                            </div>
+
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="form-check mb-2">
+                                    {{ form_usuario.usuario_ativo(class="form-check-input", id="usuarioAtivo") }}
+                                    <label class="form-check-label text-white" for="usuarioAtivo">Usuário ativo</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-5">
+                    <p class="text-secondary small m-0">* Campos obrigatórios.</p>
+
+                    <div class="d-flex gap-3">
+                        <a href="{{ url_for('pessoas.pessoas') }}" class="btn btn-outline-secondary px-4">Cancelar</a>
+
+                        <button type="submit" class="btn px-5 py-2 fw-bold" style="background-color: #9bc8f1; color: #1a1d20; border: none; border-radius: 6px;">
+                            Salvar Cadastro
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function abrirAbaDados() {
+        const dadosTab = document.getElementById('dados-tab');
+
+        if (dadosTab) {
+            const tab = new bootstrap.Tab(dadosTab);
+            tab.show();
+        }
+    }
+
+    function toggleVinculosCadastro() {
+        const checkCliente = document.getElementById('tipoCliente');
+        const checkFornecedor = document.getElementById('tipoFornecedor');
+        const checkUsuario = document.getElementById('tipoUsuario');
+
+        const clienteTabItem = document.getElementById('clienteTabItem');
+        const fornecedorTabItem = document.getElementById('fornecedorTabItem');
+        const usuarioTabItem = document.getElementById('usuarioTabItem');
+
+        const blocoCliente = document.getElementById('blocoCliente');
+        const blocoFornecedor = document.getElementById('blocoFornecedor');
+        const blocoUsuario = document.getElementById('blocoUsuario');
+
+        clienteTabItem.style.display = checkCliente.checked ? 'block' : 'none';
+        fornecedorTabItem.style.display = checkFornecedor.checked ? 'block' : 'none';
+        usuarioTabItem.style.display = checkUsuario.checked ? 'block' : 'none';
+
+        blocoCliente.style.display = checkCliente.checked ? 'block' : 'none';
+        blocoFornecedor.style.display = checkFornecedor.checked ? 'block' : 'none';
+        blocoUsuario.style.display = checkUsuario.checked ? 'block' : 'none';
+
+        if (!checkCliente.checked && document.getElementById('cliente-tab').classList.contains('active')) {
+            abrirAbaDados();
+        }
+
+        if (!checkFornecedor.checked && document.getElementById('fornecedor-tab').classList.contains('active')) {
+            abrirAbaDados();
+        }
+
+        if (!checkUsuario.checked && document.getElementById('usuario-tab').classList.contains('active')) {
+            abrirAbaDados();
+        }
+    }
+
+    const estadoSelect = document.getElementById('estado_id');
+    const cidadeSelect = document.getElementById('cidade_id');
+
+    estadoSelect.addEventListener('change', async function () {
+        const estadoId = this.value;
+
+        cidadeSelect.innerHTML = '<option value="">Carregando...</option>';
+        cidadeSelect.disabled = true;
+
+        if (!estadoId || estadoId === '0') {
+            cidadeSelect.innerHTML = '<option value="0">Selecione um estado primeiro</option>';
+            return;
+        }
+
+        const response = await fetch("{{ url_for('pessoas.cidades_por_estado', estado_id=0) }}".replace("0", estadoId));
+        const data = await response.json();
+
+        cidadeSelect.innerHTML = '<option value="0">Selecione...</option>';
+
+        data.cidades.forEach(function (cidade) {
+            const option = document.createElement('option');
+            option.value = cidade.id;
+            option.textContent = cidade.nome;
+            cidadeSelect.appendChild(option);
+        });
+
+        cidadeSelect.disabled = false;
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleVinculosCadastro();
+
+        if (!estadoSelect.value || estadoSelect.value === '0') {
+            cidadeSelect.disabled = true;
+            cidadeSelect.innerHTML = '<option value="0">Selecione um estado primeiro</option>';
+        }
+    });
+</script>
+{% endblock %}

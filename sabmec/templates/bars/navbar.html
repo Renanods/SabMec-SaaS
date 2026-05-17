@@ -1,0 +1,207 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+<nav class="grade-navbar mb-4">
+    <form method="GET" action="{{ action_url }}">
+        <input type="hidden" name="pesquisar" value="1">
+
+        <div class="row g-3 align-items-end">
+            <div class="col-md">
+                <label class="label-filter">
+                    {% if tipo_item %}
+                        Item
+                    {% elif tipo_veiculo %}
+                        Veículo
+                    {% else %}
+                        Pessoa
+                    {% endif %}
+                </label>
+
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-secondary" style="border-color: #3d4246 !important;">
+                        <i class="bi bi-search"></i>
+                    </span>
+
+                    <input
+                        type="text"
+                        name="busca"
+                        class="form-control form-control-custom"
+                        placeholder="{{ placeholder }}"
+                        value="{{ busca or '' }}"
+                    >
+                </div>
+            </div>
+
+            <div class="col-md-auto d-flex gap-2">
+                <button type="submit" class="btn btn-outline-light px-4 fw-bold" style="height: 45px;">
+                    Buscar
+                </button>
+            </div>
+        </div>
+
+        {% if tipo_pessoa %}
+            <div class="row g-3 align-items-end mt-1">
+                <div class="col-md-2" style="min-width: 180px;">
+                    <label class="label-filter">Tipo de pessoa</label>
+
+                    <select name="tipo_pessoa" class="form-select form-control-custom">
+                        <option value="" {{ 'selected' if not tipo_pessoa_selecionado else '' }}>Todos</option>
+                        <option value="cliente" {{ 'selected' if tipo_pessoa_selecionado == 'cliente' else '' }}>Cliente</option>
+                        <option value="fornecedor" {{ 'selected' if tipo_pessoa_selecionado == 'fornecedor' else '' }}>Fornecedor</option>
+                        <option value="usuario" {{ 'selected' if tipo_pessoa_selecionado == 'usuario' else '' }}>Usuário</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2" style="min-width: 160px;">
+                    <label class="label-filter">Status</label>
+
+                    <select name="status" class="form-select form-control-custom">
+                        <option value="" {{ 'selected' if not status else '' }}>Todos</option>
+                        <option value="ativo" {{ 'selected' if status == 'ativo' else '' }}>Ativos</option>
+                        <option value="inativo" {{ 'selected' if status == 'inativo' else '' }}>Inativos</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="label-filter">Buscar por</label>
+
+                    <div class="d-flex gap-3 mt-1">
+                        {% set is_codigo = 'checked' if (tipo_busca == 'codigo' or not tipo_busca) else '' %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_busca" value="codigo" {{ is_codigo }}>
+                            <label class="form-check-label text-light small">Código</label>
+                        </div>
+
+                        {% set is_nome = 'checked' if tipo_busca == 'nome' else '' %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_busca" value="nome" {{ is_nome }}>
+                            <label class="form-check-label text-light small">Nome</label>
+                        </div>
+
+                        {% set is_cpf = 'checked' if tipo_busca == 'cpf' else '' %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_busca" value="cpf" {{ is_cpf }}>
+                            <label class="form-check-label text-light small">CPF/CNPJ</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if tipo_item %}
+            <div class="row g-3 align-items-end mt-1">
+                <div class="col-md-2" style="min-width: 180px;">
+                    <label class="label-filter">Tipo de item</label>
+
+                    <select name="tipo_item" class="form-select form-control-custom">
+                        <option value="" {{ 'selected' if not tipo_item_selecionado else '' }}>Todos</option>
+                        <option value="Produto" {{ 'selected' if tipo_item_selecionado == 'Produto' else '' }}>Produto</option>
+                        <option value="Servico" {{ 'selected' if tipo_item_selecionado == 'Servico' else '' }}>Serviço</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2" style="min-width: 160px;">
+                    <label class="label-filter">Status</label>
+
+                    <select name="status" class="form-select form-control-custom">
+                        <option value="" {{ 'selected' if not status else '' }}>Todos</option>
+                        <option value="ativo" {{ 'selected' if status == 'ativo' else '' }}>Ativos</option>
+                        <option value="inativo" {{ 'selected' if status == 'inativo' else '' }}>Inativos</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="label-filter">Buscar por</label>
+
+                    <div class="d-flex gap-3 mt-1">
+                        {% set is_codigo = 'checked' if (tipo_busca == 'codigo' or not tipo_busca) else '' %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_busca" value="codigo" {{ is_codigo }}>
+                            <label class="form-check-label text-light small">Código</label>
+                        </div>
+
+                        {% set is_nome = 'checked' if tipo_busca == 'nome' else '' %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_busca" value="nome" {{ is_nome }}>
+                            <label class="form-check-label text-light small">Nome</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if tipo_veiculo %}
+            <div class="row g-3 align-items-end mt-1">
+                <div class="col-md-2" style="min-width: 160px;">
+                    <label class="label-filter">Status</label>
+
+                    <select name="status" class="form-select form-control-custom">
+                        <option value="" {{ 'selected' if not status else '' }}>Todos</option>
+                        <option value="ativo" {{ 'selected' if status == 'ativo' else '' }}>Ativos</option>
+                        <option value="inativo" {{ 'selected' if status == 'inativo' else '' }}>Inativos</option>
+                    </select>
+                </div>
+
+                <div class="col-md-5">
+                    <label class="label-filter">Buscar por</label>
+
+                    <div class="d-flex gap-3 mt-1">
+                        {% set is_codigo = 'checked' if (tipo_busca == 'codigo' or not tipo_busca) else '' %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_busca" value="codigo" {{ is_codigo }}>
+                            <label class="form-check-label text-light small">Código</label>
+                        </div>
+
+                        {% set is_placa = 'checked' if tipo_busca == 'placa' else '' %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_busca" value="placa" {{ is_placa }}>
+                            <label class="form-check-label text-light small">Placa</label>
+                        </div>
+
+                        {% set is_modelo = 'checked' if tipo_busca == 'modelo' else '' %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_busca" value="modelo" {{ is_modelo }}>
+                            <label class="form-check-label text-light small">Modelo</label>
+                        </div>
+
+                        {% set is_proprietario = 'checked' if tipo_busca == 'proprietario' else '' %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_busca" value="proprietario" {{ is_proprietario }}>
+                            <label class="form-check-label text-light small">Proprietário</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if tipo_condicao %}
+            <div class="row g-3 align-items-end mt-1">
+                <div class="col-md-2" style="min-width: 160px;">
+                    <label class="label-filter">Status</label>
+
+                    <select name="status" class="form-select form-control-custom">
+                        <option value=""        {{ 'selected' if not status }}>Todos</option>
+                        <option value="ativo"   {{ 'selected' if status == 'ativo' }}>Ativos</option>
+                        <option value="inativo" {{ 'selected' if status == 'inativo' }}>Inativos</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="label-filter">Buscar por</label>
+
+                    <div class="d-flex gap-3 mt-1">
+                        {% set is_codigo = 'checked' if (tipo_busca == 'codigo' or not tipo_busca) else '' %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_busca" value="codigo" {{ is_codigo }}>
+                            <label class="form-check-label text-light small">Código</label>
+                        </div>
+
+                        {% set is_nome = 'checked' if tipo_busca == 'nome' else '' %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_busca" value="nome" {{ is_nome }}>
+                            <label class="form-check-label text-light small">Nome</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% endif %}
+    </form>
+</nav>
