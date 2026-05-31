@@ -4,7 +4,7 @@ from flask_login import login_required
 from datetime import datetime
 
 from sabmec import db
-from sabmec.routes.comercial.os import os_bp
+from sabmec.routes.comercial.os.os import os_bp
 from sabmec.models.tipos import Status
 from sabmec.models.ordem_servico import OrdemServico
 from sabmec.models.contas_receber import ContaReceber, ContaReceberBaixa

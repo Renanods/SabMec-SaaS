@@ -74,7 +74,8 @@
 %}
 
 {% set comercial_aberto =
-    endpoint.startswith('os.')
+    endpoint.startswith('os.') or
+    endpoint.startswith('agendamentos.')
 %}
 
 {% set financeiro_aberto =
@@ -200,6 +201,15 @@
                          id="menuComercial">
 
                         <ul class="nav flex-column mt-2 gap-1">
+
+                            <li class="nav-item">
+                                <a class="nav-link rounded-3 py-2 submenu-link {{ 'bg-sabmec-active' if endpoint.startswith('agendamentos.') else 'text-secondary hover-sidebar' }}"
+                                   href="{{ url_for('agendamentos.agendamentos', pesquisar=1) }}">
+
+                                    <i class="bi bi-calendar-event me-3 fs-5"></i>
+                                    Agendamentos
+                                </a>
+                            </li>
 
                             <li class="nav-item">
                                 <a class="nav-link rounded-3 py-2 submenu-link {{ 'bg-sabmec-active' if endpoint.startswith('os.') else 'text-secondary hover-sidebar' }}"

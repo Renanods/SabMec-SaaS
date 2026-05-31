@@ -102,4 +102,4 @@ def os():
     )
 
 
-from . import os_novo, os_editar, os_faturar, os_detalhar, os_cancelar
+from . import os_cancelar, os_detalhar, os_editar, os_faturar, os_novo

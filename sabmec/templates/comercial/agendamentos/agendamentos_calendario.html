@@ -1,0 +1,209 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Calendário de Agendamentos - SabMec</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/agendamento.css') }}">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales/pt-br.global.min.js'></script>
+    <style>
+        :root {
+            --fc-border-color: #373b3e !important;
+            --fc-page-bg-color: #212529 !important;
+            --fc-neutral-text-color: #dee2e6 !important;
+        }
+
+        .calendar-container {
+            background-color: #212529;
+            border: 1px solid #373b3e;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Ajuste do Texto do Cabeçalho do Calendário */
+        .fc-toolbar-title {
+            color: #f8f9fa;
+            font-weight: 700 !important;
+            letter-spacing: -0.5px;
+            font-size: 1.5rem !important;
+        }
+        
+        /* Customização Estilosa dos Botões do FullCalendar */
+        .fc .fc-button-primary {
+            background-color: #2b3035 !important;
+            border: 1px solid #495057 !important;
+            color: #e9ecef !important;
+            border-radius: 8px !important;
+            text-transform: capitalize;
+            font-weight: 600 !important;
+            padding: 8px 14px !important;
+            transition: all 0.2s ease;
+        }
+        
+        .fc .fc-button-primary:hover {
+            background-color: #343a40 !important;
+            border-color: #6c757d !important;
+            color: #ffffff !important;
+        }
+
+        .fc .fc-button-primary:disabled {
+            background-color: #212529 !important;
+            border-color: #343a40 !important;
+            opacity: 0.5;
+        }
+
+        .fc .fc-button-active {
+            background-color: #0dcaf0 !important;
+            border-color: #0dcaf0 !important;
+            color: #212529 !important;
+            box-shadow: 0 0 10px rgba(13, 202, 240, 0.4) !important;
+        }
+
+        .fc .fc-button-active:focus, 
+        .fc .fc-button-primary:focus {
+            box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25) !important;
+        }
+        
+        /* Customização dos Eventos (Cards de Agendamento) */
+        .fc-event {
+            border-radius: 6px !important;
+            padding: 4px 8px !important;
+            font-weight: 600;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            border: none !important;
+            cursor: pointer;
+        }
+        
+        .fc-event:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.35);
+            filter: brightness(1.2);
+        }
+
+        /* Estilização da Grade de Dias e Horas */
+        .fc .fc-timegrid-slot-label-cushion, 
+        .fc .fc-col-header-cell-cushion {
+            color: #f8f9fa !important;
+            text-decoration: none !important;
+            font-weight: 600;
+        }
+
+        .fc .fc-timegrid-slot {
+            height: 3.5em !important; /* Visualizador de tempo mais espaçoso e limpo */
+        }
+
+        .fc .fc-highlight {
+            background: rgba(13, 202, 240, 0.1) !important;
+        }
+        
+        /* Estilização Customizada da Scrollbar Interna */
+        .fc-scroller::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .fc-scroller::-webkit-scrollbar-track {
+            background: #212529;
+        }
+        .fc-scroller::-webkit-scrollbar-thumb {
+            background: #495057;
+            border-radius: 4px;
+        }
+        .fc-scroller::-webkit-scrollbar-thumb:hover {
+            background: #6c757d;
+        }
+
+        /* Responsividade para telas mobile pequenas */
+        @media (max-width: 768px) {
+            .fc .fc-toolbar {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .calendar-container {
+                padding: 12px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid px-4 mt-4">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+            <div>
+                <h4 class="text-light mb-0">
+                    <i class="bi bi-calendar3 text-info me-2"></i>Calendário de Agendamentos
+                </h4>
+                <p class="text-muted small mb-0 d-none d-sm-block">Gerencie e visualize a ocupação da sua oficina em tempo real</p>
+            </div>
+            <div class="d-flex gap-2 w-100">
+                <a href="{{ url_for('agendamentos.agendamentos', pesquisar=1) }}" class="btn btn-outline-light flex-grow-1 flex-sm-grow-0">
+                    <i class="bi bi-list-ul me-1"></i> Ver em Lista
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="calendar-container">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4 mb-4">
+            <div class="col-12 d-flex flex-wrap gap-3 justify-content-center">
+                <span class="d-flex align-items-center text-secondary small bg-dark px-3 py-1.5 rounded-pill border border-secondary shadow-sm">
+                    <span class="bg-warning rounded-circle me-2" style="width: 10px; height: 10px; display: inline-block;"></span>
+                    <span class="text-light">Agendado / Confirmado</span>
+                </span>
+                <span class="d-flex align-items-center text-secondary small bg-dark px-3 py-1.5 rounded-pill border border-secondary shadow-sm">
+                    <span class="bg-success rounded-circle me-2" style="width: 10px; height: 10px; display: inline-block;"></span>
+                    <span class="text-light">Concluído</span>
+                </span>
+                <span class="d-flex align-items-center text-secondary small bg-dark px-3 py-1.5 rounded-pill border border-secondary shadow-sm">
+                    <span class="bg-danger rounded-circle me-2" style="width: 10px; height: 10px; display: inline-block;"></span>
+                    <span class="text-light">Cancelado</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+     <a href="{{ url_for('agendamentos.agendamento_novo') }}" class="btn-flutuante imp" title="Novo Agendamento">
+        <i class="bi bi-plus"></i>
+    </a>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                locale: 'pt-br',
+                initialView: 'timeGridWeek',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                buttonText: {
+                    today: 'Hoje',
+                    month: 'Mês',
+                    week: 'Semana',
+                    day: 'Dia'
+                },
+                slotMinTime: '00:00:00',
+                slotMaxTime: '24:00:00',
+                allDaySlot: false,
+                nowIndicator: true, 
+                slotDuration: '00:30:00', 
+                events: '{{ url_for("agendamentos.api_eventos") }}',
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        window.location.href = info.event.url;
+                        info.jsEvent.preventDefault(); 
+                    }   
+                }
+            });
+            calendar.render();
+        });
+    </script>
+{% endblock %}

@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash
 from flask_login import login_required
 
-from sabmec.routes.comercial.os import os_bp
+from sabmec.routes.comercial.os.os import os_bp
 from sabmec.models.ordem_servico import OrdemServico
 from sabmec.models.contas_receber import ContaReceber
 

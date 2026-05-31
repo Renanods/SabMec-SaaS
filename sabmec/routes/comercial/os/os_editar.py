@@ -5,7 +5,7 @@ from flask import render_template, request, redirect, url_for, flash, jsonify, s
 from flask_login import login_required
 
 from sabmec import db
-from sabmec.routes.comercial.os import os_bp
+from sabmec.routes.comercial.os.os import os_bp
 from sabmec.forms.os_forms import (
     FormOrdemServico,
     FormOrdemServicoItem,

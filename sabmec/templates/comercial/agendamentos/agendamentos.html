@@ -1,0 +1,244 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Agendamentos - SabMec</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/agendamento.css') }}">
+    <style>
+        .imp {
+            z-index: 9999 !important;
+        }
+        .card-linha, .card-body {
+            overflow: visible !important;
+        }
+        .card-linha {
+            position: relative !important;
+            z-index: 1 !important;
+        }
+        .card-linha:hover {
+            z-index: 5 !important;
+        }
+        .card-linha:has(.dropdown-menu.show),
+        .card-linha:focus-within {
+            z-index: 9999 !important;
+        }
+        .dropdown-menu {
+            z-index: 9999 !important;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    {# IDs dos status de agendamento #}
+    {% set STATUS_AGENDADO  = 6 %}
+    {% set STATUS_CONCLUIDO = 7 %}
+    {% set STATUS_CANCELADO = 3 %}
+
+    {% set action_url = url_for('agendamentos.agendamentos') %}
+    {% set placeholder = 'Buscar agendamento por nome do cliente...' %}
+    {% set calendario = True %}
+    {% set os = False %}
+    {% set financeiro = False %}
+    
+    <nav class="grade-navbar mb-4">
+        <form method="GET" action="{{ action_url }}">
+            <input type="hidden" name="pesquisar" value="1">
+            <div class="row g-3 align-items-end">
+                <div class="col-md">
+                    <label class="label-filter">Busca</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-secondary" style="border-color: #3d4246 !important;">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" name="busca" class="form-control form-control-custom" placeholder="{{ placeholder }}" value="{{ busca or '' }}">
+                    </div>
+                </div>
+
+                <div class="col-md-2" style="max-width: 180px;">
+                    <label class="label-filter">De:</label>
+                    <input type="date" name="data_inicio" class="form-control form-control-custom" value="{{ data_inicio or '' }}">
+                </div>
+
+                <div class="col-md-2" style="max-width: 180px;">
+                    <label class="label-filter">Até:</label>
+                    <input type="date" name="data_fim" class="form-control form-control-custom" value="{{ data_fim or '' }}">
+                </div>
+
+                <div class="col-md-2" style="min-width: 180px;">
+                    <label class="label-filter">Status</label>
+                    <select name="status" class="form-select form-control-custom">
+                        <option value="" {{ 'selected' if not status else '' }}>Todos os Status</option>
+                        {% for s in todos_status %}
+                            <option value="{{ s.id }}" {{ 'selected' if status == s.id|string else '' }}>{{ s.situacao }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-light px-4 fw-bold" style="height: 45px;">
+                        Buscar
+                    </button>
+                    <a href="{{ url_for('agendamentos.agendamentos_calendario') }}" class="btn btn-outline-info px-3 d-flex align-items-center" style="height: 45px;" title="Ver no Calendário">
+                        <i class="bi bi-calendar3"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </nav>
+
+    <div class="container-fluid px-4 mt-3">
+        <div class="row">
+            {% for agendamento in agendamentos %}
+                <div class="col-12">
+                    <div class="card card-linha bg-dark border-secondary text-light shadow-sm">
+                        <div class="card-body d-flex align-items-center py-3">
+                            <div class="info-principal">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-info text-dark">#{{ agendamento.id }}</span>
+                                    <h5 class="mb-0 fw-bold text-truncate">
+                                        {{ agendamento.cliente.nome if agendamento.cliente else '---' }}
+                                    </h5>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    {% if agendamento.status_id == STATUS_AGENDADO %}
+                                        <span class="badge border border-warning text-warning" style="font-size: 0.6rem;">AGENDADO</span>
+                                    {% elif agendamento.status_id == STATUS_CONCLUIDO %}
+                                        <span class="badge border border-success text-success" style="font-size: 0.6rem;">CONCLUÍDO</span>
+                                    {% elif agendamento.status_id == STATUS_CANCELADO %}
+                                        <span class="badge border border-danger text-danger" style="font-size: 0.6rem;">CANCELADO</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary" style="font-size: 0.6rem;">{{ agendamento.status.situacao if agendamento.status else '---' }}</span>
+                                    {% endif %}
+                                    <span class="badge border border-secondary text-secondary" style="font-size: 0.6rem;">
+                                        {{ agendamento.data.strftime('%d/%m/%Y') }} às {{ agendamento.hora.strftime('%H:%M') }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="flex-grow-1 d-flex flex-wrap gap-4 align-items-center">
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Veículo</label>
+                                    <span class="small">
+                                        {% if agendamento.veiculo %}
+                                            {{ agendamento.veiculo.placa }} - {{ agendamento.veiculo.modelo }}
+                                        {% else %}
+                                            ---
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">Problema Relatado</label>
+                                    <span class="small text-truncate d-inline-block" style="max-width: 250px;">
+                                        {{ agendamento.problema_relatado or '---' }}
+                                    </span>
+                                </div>
+                                {% if agendamento.ordem_servico %}
+                                <div>
+                                    <label class="d-block text-secondary small mb-0 me-5">OS Gerada</label>
+                                    <a href="{{ url_for('os.os_detalhar', id=agendamento.ordem_servico_id) }}" class="small text-info text-decoration-none">
+                                        #{{ agendamento.ordem_servico_id }}
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-2 ms-5"> 
+                                {% if agendamento.status_id not in [STATUS_CONCLUIDO, STATUS_CANCELADO] %}
+                                    <a href="{{ url_for('agendamentos.agendamento_editar', id=agendamento.id) }}" class="btn btn-outline-light btn-sm px-3">
+                                        <i class="bi bi-pencil"></i>
+                                        <span class="d-none d-md-inline ms-1">Editar</span>
+                                    </a>
+                                {% endif %}
+
+                                <a href="{{ url_for('agendamentos.agendamento_detalhar', id=agendamento.id) }}" class="btn btn-outline-info btn-sm px-3">
+                                    <i class="bi bi-eye"></i>
+                                    <span class="d-none d-md-inline ms-1">Detalhar</span>
+                                </a>
+
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm px-2 text-light border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end border-secondary shadow">
+                                        {% if agendamento.status_id == STATUS_AGENDADO %}
+                                            <li>
+                                                <form method="POST" action="{{ url_for('agendamentos.agendamento_concluir', id=agendamento.id) }}" class="m-0">
+                                                    {% if csrf_token is defined %}
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    {% endif %}
+                                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-success">
+                                                        <i class="bi bi-check-circle"></i> Concluir Agendamento
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        {% endif %}
+                                        {% if agendamento.status_id not in [STATUS_CONCLUIDO, STATUS_CANCELADO] %}
+                                            <li>
+                                                <button type="button" class="dropdown-item d-flex align-items-center gap-2 text-danger" data-bs-toggle="modal" data-bs-target="#modalCancelarAgendamento{{ agendamento.id }}">
+                                                    <i class="bi bi-x-circle"></i> Cancelar Agendamento
+                                                </button>
+                                            </li>
+                                        {% else %}
+                                            <li><span class="dropdown-item-text text-secondary small">Sem ações adicionais</span></li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if agendamento.status_id not in [STATUS_CONCLUIDO, STATUS_CANCELADO] %}
+                <div class="modal fade" id="modalCancelarAgendamento{{ agendamento.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark text-white border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Cancelar Agendamento #{{ agendamento.id }}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="mb-2">Tem certeza que deseja cancelar o agendamento de <strong>{{ agendamento.cliente.nome }}</strong>?</p>
+                                <p class="text-secondary small mb-0">Esta ação não pode ser desfeita e o status será alterado para Cancelado.</p>
+                            </div>
+                            <div class="modal-footer border-secondary">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button>
+                                <form method="POST" action="{{ url_for('agendamentos.agendamento_cancelar', id=agendamento.id) }}">
+                                    {% if csrf_token is defined %}
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% endif %}
+                                    <button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            {% else %}
+                <div class="col-12 text-center py-5">
+                    {% if not busca and not status and not data_inicio and not data_fim %}
+                        <p class="text-secondary">Utilize os filtros acima para pesquisar agendamentos ou crie um novo.</p>
+                    {% else %}
+                        <p class="text-secondary">Nenhum agendamento encontrado para os filtros selecionados.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <a href="{{ url_for('agendamentos.agendamento_novo') }}" class="btn-flutuante imp" title="Novo Agendamento">
+        <i class="bi bi-plus"></i>
+    </a>
+
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+        <div class="container-fluid px-4 pt-3">
+            {% for categoria, mensagem in mensagens %}
+                <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                    {{ mensagem }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+{% endblock %}

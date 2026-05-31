@@ -1,0 +1,137 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Editar Agendamento - SabMec</title>
+{% endblock %}
+
+{% block body %}
+    <div class="content-wrapper mt-4 px-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="text-light fw-bold m-0"><i class="bi bi-pencil-square text-info me-2"></i>Editar Agendamento #{{ agendamento.id }}</h4>
+            <a href="{{ url_for('agendamentos.agendamentos') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+
+        {% with mensagens = get_flashed_messages(with_categories=true) %}
+            {% if mensagens %}
+                {% for categoria, mensagem in mensagens %}
+                    <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                        {{ mensagem }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('agendamentos.agendamento_editar', id=agendamento.id) }}" id="formAgendamento">
+            {{ form.csrf_token }}
+
+            <div class="form-card shadow-sm">
+                <div class="card-header-custom">
+                    <i class="bi bi-person-lines-fill fs-5"></i>
+                    <h5 class="m-0 fw-bold">Dados do Agendamento</h5>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Cliente</label>
+                        <input type="hidden" name="cliente_id" id="cliente_id" value="{{ request.form.get('cliente_id', agendamento.cliente_id) }}">
+
+                        <div class="input-group">
+                            <input type="text" id="cliente_busca" class="form-control form-control-sabmec" placeholder="Digite e pressione Enter..." autocomplete="off" value="{{ cliente_nome or '' }}">
+                            <button type="button" id="btnConsultaCliente" class="btn btn-outline-info">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+
+                        {% if form.cliente_id.errors %}
+                            <div class="text-danger small mt-1">{{ form.cliente_id.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Veiculo</label>
+                        {{ form.veiculo_id(class="form-select form-control-sabmec", id="veiculo_id") }}
+                        {% if form.veiculo_id.errors %}
+                            <div class="text-danger small mt-1">{{ form.veiculo_id.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Data</label>
+                        {{ form.data(class="form-control form-control-sabmec") }}
+                        {% if form.data.errors %}
+                            <div class="text-danger small mt-1">{{ form.data.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Hora</label>
+                        {{ form.hora(class="form-control form-control-sabmec") }}
+                        {% if form.hora.errors %}
+                            <div class="text-danger small mt-1">{{ form.hora.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-12">
+                        <label class="form-label-custom">Problema Relatado</label>
+                        {{ form.problema_relatado(class="form-control form-control-sabmec", rows="3", placeholder="Descricao do problema relatado pelo cliente...") }}
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label-custom">Observacoes Internas</label>
+                        {{ form.observacoes(class="form-control form-control-sabmec", rows="2") }}
+                    </div>
+                </div>
+
+                <div class="text-end mt-4 pt-3 border-top border-secondary border-opacity-25">
+                    <button type="button" class="btn btn-outline-secondary me-2" onclick="window.location.href='{{ url_for('agendamentos.agendamento_detalhar', id=agendamento.id) }}'">Cancelar</button>
+                    {{ form.submit(class="btn btn-success px-4 fw-bold") }}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% include 'componentes/modal_consulta_clientes.html' %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            inicializarConsultaClientes({
+                inputId: 'cliente_busca',
+                hiddenId: 'cliente_id',
+                buttonId: 'btnConsultaCliente',
+                onSelect: function (cliente) {
+                    carregarVeiculosCliente(cliente.id);
+                }
+            });
+
+            async function carregarVeiculosCliente(clienteIdSelecionado) {
+                const veiculoSelect = document.getElementById('veiculo_id');
+                veiculoSelect.innerHTML = '<option value="0">Carregando...</option>';
+                veiculoSelect.disabled = true;
+
+                try {
+                    const response = await fetch(`/os/veiculos-por-cliente/${clienteIdSelecionado}`);
+                    const data = await response.json();
+                    veiculoSelect.innerHTML = '<option value="0">Selecione...</option>';
+
+                    data.veiculos.forEach(veiculo => {
+                        const option = document.createElement('option');
+                        option.value = veiculo.id;
+                        option.textContent = `${veiculo.placa} - ${veiculo.modelo}`;
+                        veiculoSelect.appendChild(option);
+                    });
+                } catch (error) {
+                    veiculoSelect.innerHTML = '<option value="0">Erro ao carregar veiculos</option>';
+                } finally {
+                    veiculoSelect.disabled = false;
+                }
+            }
+        });
+    </script>
+{% endblock %}

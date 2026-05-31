@@ -24,6 +24,7 @@ from sabmec.models.ordem_servico import OrdemServico, OrdemServicoItem, OrdemSer
 from sabmec.models.tipos import Status
 from sabmec.models.contas_receber import ContaReceber, ContaReceberBaixa
 from sabmec.models.config import ConfiguracaoOs
+from sabmec.models.agendamento import Agendamento
 
 @login_manager.user_loader
 def load_usuario(id_usuario):
@@ -39,11 +40,12 @@ from sabmec.routes.main.home import main_bp
 from sabmec.routes.cadastros.pessoas import pessoas_bp
 from sabmec.routes.cadastros.itens import itens_bp
 from sabmec.routes.cadastros.veiculos import veiculos_bp
-from sabmec.routes.comercial.os import os_bp
+from sabmec.routes.comercial.os.os import os_bp
 from sabmec.routes.cadastros.condicao_pagamento import condicao_pgto_bp
 from sabmec.routes.financeiro.contas_receber import contas_receber_bp
 from sabmec.routes.impressoes.comercial.impressao_os import impressao_os_bp
 from sabmec.routes.configuracao.config import configuracoes_bp
+from sabmec.routes.comercial.agendamentos.agendamentos import agendamentos_bp
 
 app.register_blueprint(auth_bp) # Autenticação (Login, Logoff)
 app.register_blueprint(main_bp) # Home e Dashboard
@@ -55,6 +57,7 @@ app.register_blueprint(condicao_pgto_bp) # Cadastro de condições de pgto
 app.register_blueprint(contas_receber_bp) # Contas a receber
 app.register_blueprint(impressao_os_bp) # Impressões da OS
 app.register_blueprint(configuracoes_bp) # Configurações
+app.register_blueprint(agendamentos_bp) # Configurações
 
 @app.context_processor
 def inject_empresa_sidebar():

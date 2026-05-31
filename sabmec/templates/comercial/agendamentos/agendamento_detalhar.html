@@ -1,0 +1,177 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Detalhes do Agendamento #{{ agendamento.id }} - SabMec</title>
+{% endblock %}
+
+{% block body %}
+    {# IDs dos status de agendamento #}
+    {% set STATUS_AGENDADO  = 6 %}
+    {% set STATUS_CONCLUIDO = 7 %}
+    {% set STATUS_CANCELADO = 3 %}
+
+    <div class="content-wrapper mt-4 px-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="text-light fw-bold m-0"><i class="bi bi-calendar2-check text-info me-2"></i>Detalhes do Agendamento #{{ agendamento.id }}</h4>
+            <div>
+                <a href="{{ url_for('agendamentos.agendamentos', pesquisar=1) }}" class="btn btn-outline-secondary btn-sm me-2">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                {% if agendamento.status_id == STATUS_AGENDADO %}
+                    <form method="POST" action="{{ url_for('agendamentos.agendamento_concluir', id=agendamento.id) }}" class="d-inline-block me-2">
+                        {% if csrf_token is defined %}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {% endif %}
+                        <button type="submit" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-check-circle"></i> Concluir
+                        </button>
+                    </form>
+                {% endif %}
+                {% if agendamento.status_id not in [STATUS_CONCLUIDO, STATUS_CANCELADO] %}
+                    <a href="{{ url_for('agendamentos.agendamento_editar', id=agendamento.id) }}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% with mensagens = get_flashed_messages(with_categories=true) %}
+            {% if mensagens %}
+                {% for categoria, mensagem in mensagens %}
+                    <div class="alert alert-{{ categoria }} alert-dismissible fade show" role="alert">
+                        {{ mensagem }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="form-card shadow-sm mb-4">
+            <div class="card-header-custom justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle fs-5"></i>
+                    <h5 class="m-0 fw-bold">Informações Gerais</h5>
+                </div>
+                <div>
+                    {% if agendamento.status_id == STATUS_AGENDADO %}
+                        <span class="badge border border-info text-info px-3 py-2">AGENDADO</span>
+                    {% elif agendamento.status_id == STATUS_CONCLUIDO %}
+                        <span class="badge border border-secondary text-secondary px-3 py-2">CONCLUÍDO</span>
+                    {% elif agendamento.status_id == STATUS_CANCELADO %}
+                        <span class="badge border border-danger text-danger px-3 py-2">CANCELADO</span>
+                    {% else %}
+                        <span class="badge border border-secondary text-secondary px-3 py-2">{{ agendamento.status.situacao if agendamento.status else '---' }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label-custom">Cliente</label>
+                    <p class="text-light mb-0 fs-5">{{ agendamento.cliente.nome }}</p>
+                    <small class="text-secondary">{{ agendamento.cliente.documento_fiscal or 'Sem documento' }}</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-custom">Veículo</label>
+                    <p class="text-light mb-0 fs-5">{{ agendamento.veiculo.placa }} - {{ agendamento.veiculo.modelo }}</p>
+                    <small class="text-secondary">{{ agendamento.veiculo.marca }}</small>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label-custom">Data do Agendamento</label>
+                    <p class="text-light mb-0 fs-5">{{ agendamento.data.strftime('%d/%m/%Y') }}</p>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-custom">Horário</label>
+                    <p class="text-light mb-0 fs-5">{{ agendamento.hora.strftime('%H:%M') }}</p>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-custom">Data de Registro</label>
+                    <p class="text-light mb-0">{{ agendamento.criado_em.strftime('%d/%m/%Y %H:%M') }}</p>
+                </div>
+            </div>
+            
+            <hr class="border-secondary border-opacity-25 my-4">
+
+            <div class="row g-4">
+                <div class="col-md-12">
+                    <label class="form-label-custom">Problema Relatado</label>
+                    <div class="p-3 bg-dark border border-secondary rounded text-light" style="min-height: 80px;">
+                        {{ agendamento.problema_relatado or 'Nenhum problema relatado.' }}
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label-custom">Observações Internas</label>
+                    <div class="p-3 bg-dark border border-secondary rounded text-light" style="min-height: 60px;">
+                        {{ agendamento.observacoes or 'Nenhuma observação.' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-card shadow-sm border-info border-opacity-50">
+            <div class="card-header-custom text-info">
+                <i class="bi bi-tools fs-5"></i>
+                <h5 class="m-0 fw-bold">Integração com Ordem de Serviço</h5>
+            </div>
+            
+            <div class="d-flex align-items-center justify-content-between p-3 bg-dark rounded border border-secondary">
+                <div>
+                    {% if agendamento.ordem_servico %}
+                        <p class="text-light mb-1">Este agendamento já possui uma Ordem de Serviço vinculada.</p>
+                        <a href="{{ url_for('os.os_detalhar', id=agendamento.ordem_servico_id) }}" class="btn btn-sm btn-info fw-bold mt-2">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> Acessar OS #{{ agendamento.ordem_servico_id }}
+                        </a>
+                    {% else %}
+                        <p class="text-light mb-1">O cliente chegou? Transforme este agendamento em uma Ordem de Serviço.</p>
+                        <p class="text-secondary small mb-0">Os dados do cliente, veículo e problema relatado serão copiados automaticamente.</p>
+                    {% endif %}
+                </div>
+                
+                {% if not agendamento.ordem_servico and agendamento.status_id == STATUS_CONCLUIDO %}
+                    <button type="button" class="btn btn-success fw-bold px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalCriarOS">
+                        <i class="bi bi-wrench me-2"></i> Criar Ordem de Serviço
+                    </button>
+                {% elif agendamento.status_id != STATUS_CONCLUIDO and not agendamento.ordem_servico %}
+                    <div class="text-secondary small">
+                        O agendamento precisa ser concluído antes de criar a OS.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Criar OS -->
+    {% if not agendamento.ordem_servico and agendamento.status_id == STATUS_CONCLUIDO %}
+    <div class="modal fade" id="modalCriarOS" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Criar Ordem de Serviço</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Uma nova Ordem de Serviço será criada com os seguintes dados:</p>
+                    <ul class="text-info mb-3">
+                        <li>Cliente: {{ agendamento.cliente.nome }}</li>
+                        <li>Veículo: {{ agendamento.veiculo.placa }} - {{ agendamento.veiculo.modelo }}</li>
+                        <li>Relato: (Copiado do agendamento)</li>
+                    </ul>
+                    <p class="text-warning small mb-0"><i class="bi bi-exclamation-triangle me-1"></i> A Ordem de Serviço será gerada e os itens poderão ser adicionados na próxima tela.</p>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form method="POST" action="{{ url_for('agendamentos.agendamento_criar_os', id=agendamento.id) }}">
+                        {% if csrf_token is defined %}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {% endif %}
+                        <button type="submit" class="btn btn-success fw-bold"><i class="bi bi-check-lg me-1"></i> Confirmar e Criar OS</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
