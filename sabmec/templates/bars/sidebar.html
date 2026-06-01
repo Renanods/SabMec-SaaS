@@ -82,16 +82,32 @@
     endpoint.startswith('contas_receber.')
 %}
 
-<nav class="col-md-3 col-lg-2 d-md-block bg-dark border-end border-secondary border-opacity-25 p-0 shadow-lg sticky-top vh-100 d-flex flex-column overflow-y-auto">
+<nav id="sidebarMenu" class="offcanvas-md offcanvas-start col-md-3 col-lg-2 bg-dark border-end border-secondary border-opacity-25 p-0 shadow-lg d-md-flex flex-column overflow-y-auto" tabindex="-1" aria-labelledby="sidebarMenuLabel">
+
+    <!-- Header do Offcanvas - Visível apenas no Celular -->
+    <div class="offcanvas-header bg-dark border-bottom border-secondary border-opacity-25 d-md-none py-3 px-4">
+        <h5 class="offcanvas-title fw-bold text-white m-0" id="sidebarMenuLabel">
+            <i class="bi bi-gear-fill text-sabmec me-2"></i>
+            Sab<span class="text-sabmec">Mec</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Fechar"></button>
+    </div>
 
     <div class="pt-4 flex-grow-1">
 
-        <div class="px-4 mb-5">
+        <div class="px-4 mb-5 d-none d-md-block">
             <h4 class="fw-bold m-0 text-white">
                 <i class="bi bi-gear-fill text-sabmec me-2"></i>
                 Sab<span class="text-sabmec">Mec</span>
             </h4>
 
+            <span class="text-secondary small fw-light">
+                {{ empresa_sidebar.nome_fantasia or empresa_sidebar.nome if empresa_sidebar else 'Sem Empresa' }}
+            </span>
+        </div>
+        
+        <!-- Bloco para Mobile: Mostra a empresa sem o título "SabMec" que já está no Offcanvas Header -->
+        <div class="px-4 mb-4 d-md-none">
             <span class="text-secondary small fw-light">
                 {{ empresa_sidebar.nome_fantasia or empresa_sidebar.nome if empresa_sidebar else 'Sem Empresa' }}
             </span>

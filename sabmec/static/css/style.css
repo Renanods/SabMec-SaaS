@@ -60,3 +60,148 @@
     color: #FFF;
     background-color: #128c7e; /* Verde mais escuro no hover */
 }
+
+/* ==========================================================================
+   CSS Responsivo Móvel (Premium UI/UX)
+   ========================================================================== */
+
+/* Classes Utilitárias Responsivas para Larguras em Filtros e Inputs (Desktop Only) */
+@media (min-width: 768px) {
+    .w-md-180 {
+        max-width: 180px !important;
+    }
+    .w-md-min-180 {
+        min-width: 180px !important;
+    }
+    /* Mantém a sidebar fixada na lateral e ocupando altura completa apenas no desktop */
+    #sidebarMenu {
+        position: sticky !important;
+        top: 0 !important;
+        height: 100vh !important;
+        z-index: 1000 !important;
+    }
+}
+
+/* Responsividade Geral para Telas de Celular e Tablet Pequeno (< 768px) */
+@media (max-width: 767.98px) {
+    
+    /* 1. Layout de Cards de Listagem (Pessoas, Veículos, Itens, Agendamentos, OS, etc.) */
+    .card-linha {
+        margin-bottom: 1rem !important;
+        border-radius: 12px !important;
+    }
+
+    .card-linha .card-body {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 16px !important;
+        padding: 1.25rem !important;
+    }
+
+    /* Ajuste dos blocos internos de informação nos cards */
+    .card-linha .card-body > div:not(.d-flex) {
+        margin-right: 0 !important;
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    .card-linha .info-principal {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        padding-bottom: 10px !important;
+        margin-bottom: 2px !important;
+        width: 100% !important;
+    }
+
+    .card-linha .info-principal h5 {
+        font-size: 1.1rem !important;
+        white-space: normal !important; /* Permite que o nome do cliente/peça quebre linha se for grande */
+    }
+
+    /* Ajuste da seção flexível interna dos cards */
+    .card-linha .flex-grow-1.d-flex.flex-wrap {
+        gap: 12px !important;
+        width: 100% !important;
+    }
+
+    .card-linha .flex-grow-1.d-flex.flex-wrap > div {
+        flex: 1 1 calc(50% - 10px) !important; /* Divide as infos em grid de 2 colunas no celular */
+        min-width: 120px;
+    }
+
+    /* Ajuste das ações no rodapé dos cards */
+    .card-linha .card-body .ms-auto,
+    .card-linha .card-body .ms-5,
+    .card-linha .card-body .d-flex.gap-2.ms-auto,
+    .card-linha .card-body .d-flex.align-items-center.gap-2.ms-5 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-top: 8px !important;
+        padding-top: 14px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 10px !important;
+    }
+
+    /* Garante que os botões caibam perfeitamente na mesma linha */
+    .card-linha .card-body .btn-sm {
+        padding: 8px 16px !important;
+        font-size: 0.85rem !important;
+        flex: 1; /* Faz os botões dividirem o espaço igualmente */
+        justify-content: center;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* Ajusta o dropdown de ações no celular */
+    .card-linha .dropdown {
+        flex: 0 0 auto !important;
+    }
+
+    /* 2. Filtros e Barras de Pesquisa (grade-navbar) */
+    .grade-navbar {
+        padding: 1.25rem 1rem !important;
+        margin-bottom: 1.25rem !important;
+        border-radius: 12px !important;
+    }
+
+    .grade-navbar .row {
+        gap: 14px !important;
+    }
+
+    .grade-navbar .col-md,
+    .grade-navbar .col-md-2,
+    .grade-navbar .col-md-4,
+    .grade-navbar .col-md-5,
+    .grade-navbar .col-md-auto {
+        margin-bottom: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Expandir botão Buscar e outros botões para 100% de largura */
+    .grade-navbar .btn,
+    .grade-navbar a.btn {
+        width: 100% !important;
+        height: 48px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .grade-navbar .d-flex.gap-2 {
+        width: 100% !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    /* 3. Ajuste do Botão Flutuante (Add Registro) no celular */
+    .btn-flutuante {
+        width: 52px !important;
+        height: 52px !important;
+        bottom: 24px !important;
+        right: 24px !important;
+        font-size: 24px !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+    }
+}

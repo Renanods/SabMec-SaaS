@@ -5,9 +5,30 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href=" {{ url_for('static', filename='css/bootstrap-icons.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/cadastros.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cadastros.css') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .text-sabmec { color: #9bc8f1 !important; }
+        
+        /* Layout premium no desktop com rolagem independente no main */
+        @media (min-width: 768px) {
+            .vh-md-100 {
+                height: 100vh !important;
+            }
+            .overflow-md-y-auto {
+                overflow-y: auto !important;
+            }
+        }
+        
+        /* Ajuste do offcanvas de menu lateral em celulares */
+        @media (max-width: 767.98px) {
+            #sidebarMenu.offcanvas-md {
+                width: 280px;
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+    </style>
     {% block head %}
         <title>
             SabMec
@@ -15,14 +36,29 @@
     {% endblock %}
 </head>
 <body>
- <div class="container-fluid p-0"> 
-        <div class="row g-0"> {% include 'bars/sidebar.html' %}
+    <!-- Barra Superior Mobile (Navbar) -->
+    <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-3 border-bottom border-secondary border-opacity-25 d-md-none shadow">
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <a class="navbar-brand me-0 px-2 fs-5 text-white fw-bold d-flex align-items-center" href="{{ url_for('main.home') }}">
+                <i class="bi bi-gear-fill text-sabmec me-2"></i>
+                Sab<span class="text-sabmec">Mec</span>
+            </a>
+            <button class="navbar-toggler border-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-label="Abrir Menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </header>
 
-           <main class="col-md-9 col-lg-10 bg bg-sabmec">
+    <div class="container-fluid p-0"> 
+        <div class="row g-0">
+            <!-- Sidebar -->
+            {% include 'bars/sidebar.html' %}
+
+            <!-- Conteúdo Principal -->
+            <main class="col-12 col-md-9 col-lg-10 bg bg-sabmec vh-md-100 overflow-md-y-auto">
                 {% block body %}
                 {% endblock %}
             </main>
-
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
