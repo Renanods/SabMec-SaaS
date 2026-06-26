@@ -1,0 +1,133 @@
+<div class="modal fade" id="modalConsultaFornecedores" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+            <div class="modal-header border-secondary" style="background-color: #1a1d20;">
+                <h5 class="modal-title d-flex align-items-center gap-2">
+                    <i class="bi bi-person-search text-warning"></i>
+                    Consultar Fornecedores
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <div class="d-flex gap-4 mb-3 p-2 rounded" style="background-color: #212529;">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="modal_fornecedor_tipo_busca" id="f_nome" value="nome" checked>
+                        <label class="form-check-label text-light small" for="f_nome">Nome</label>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="modal_fornecedor_tipo_busca" id="f_cod" value="id">
+                        <label class="form-check-label text-light small" for="f_cod">Código</label>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="modal_fornecedor_tipo_busca" id="f_doc" value="documento">
+                        <label class="form-check-label text-light small" for="f_doc">CPF/CNPJ</label>
+                    </div>
+                </div>
+
+                <input type="text" id="modal_fornecedor_termo" class="form-control form-control-sabmec mb-3" placeholder="Digite e pressione Enter para buscar...">
+
+                <div class="table-responsive" style="max-height: 350px;">
+                    <table class="table table-dark table-hover align-middle border-secondary">
+                        <thead class="sticky-top bg-dark">
+                            <tr class="text-secondary small">
+                                <th>COD.</th>
+                                <th>NOME</th>
+                                <th>CPF/CNPJ</th>
+                                <th class="text-end">AÇÃO</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="fornecedores_tabela">
+                            <tr>
+                                <td colspan="4" class="text-center text-secondary py-3">
+                                    Pressione Enter para consultar.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.inicializarConsultaFornecedores = function (config) {
+    const modalEl = document.getElementById('modalConsultaFornecedores');
+    const termoInput = document.getElementById('modal_fornecedor_termo');
+    const tabela = document.getElementById('fornecedores_tabela');
+    const fornecedorBusca = document.getElementById(config.inputId || 'fornecedor_busca');
+    const fornecedorId = document.getElementById(config.hiddenId || 'fornecedor_id');
+    const btnFornecedor = document.getElementById(config.buttonId || 'btnConsultaFornecedor');
+    const modalFornecedores = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+    if (!modalEl || !termoInput || !tabela || !fornecedorBusca || !fornecedorId || !btnFornecedor) {
+        return;
+    }
+
+    function abrirConsultaFornecedores() {
+        termoInput.value = fornecedorBusca.value.trim();
+        tabela.innerHTML = '<tr><td colspan="4" class="text-center text-secondary py-3">Pressione Enter para consultar.</td></tr>';
+        modalFornecedores.show();
+        setTimeout(() => { termoInput.focus(); termoInput.select(); }, 300);
+    }
+
+    async function buscarFornecedoresModal() {
+        const termo = termoInput.value.trim();
+        const tipoBusca = document.querySelector('input[name="modal_fornecedor_tipo_busca"]:checked').value;
+        tabela.innerHTML = '<tr><td colspan="4" class="text-center py-3"><div class="spinner-border spinner-border-sm text-warning"></div> Consultando...</td></tr>';
+
+        try {
+            const response = await fetch(`/contas-pagar/buscar-fornecedores?q=${encodeURIComponent(termo)}&tipo_busca=${tipoBusca}`);
+            const data = await response.json();
+            tabela.innerHTML = '';
+
+            if (!data.fornecedores || data.fornecedores.length === 0) {
+                tabela.innerHTML = '<tr><td colspan="4" class="text-center text-secondary py-3">Nenhum fornecedor encontrado.</td></tr>';
+                return;
+            }
+
+            data.fornecedores.forEach(fornecedor => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>#${fornecedor.id}</td><td>${fornecedor.nome}</td><td>${fornecedor.documento || '---'}</td><td class="text-end"><button type="button" class="btn btn-sm btn-outline-warning">Selecionar</button></td>`;
+
+                tr.querySelector('button').addEventListener('click', function () {
+                    fornecedorId.value = fornecedor.id;
+                    fornecedorBusca.value = `#${fornecedor.id} - ${fornecedor.nome}`;
+                    modalFornecedores.hide();
+
+                    if (typeof config.onSelect === 'function') {
+                        config.onSelect(fornecedor);
+                    }
+                });
+
+                tabela.appendChild(tr);
+            });
+        } catch (error) {
+            tabela.innerHTML = '<tr><td colspan="4" class="text-danger text-center py-3">Erro na consulta.</td></tr>';
+        }
+    }
+
+    fornecedorBusca.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            abrirConsultaFornecedores();
+        }
+    });
+
+    btnFornecedor.addEventListener('click', abrirConsultaFornecedores);
+
+    if (!termoInput.dataset.consultaFornecedoresBind) {
+        termoInput.dataset.consultaFornecedoresBind = '1';
+        termoInput.addEventListener('keydown', async function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                await buscarFornecedoresModal();
+            }
+        });
+    }
+};
+</script>

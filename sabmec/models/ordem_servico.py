@@ -33,7 +33,7 @@ class OrdemServico(db.Model):
         CheckConstraint("subtotal_servicos >= 0", name="ck_os_subtotal_servicos_nao_negativo"),
         CheckConstraint("desconto >= 0", name="ck_os_desconto_nao_negativo"),
         CheckConstraint("acrescimo >= 0", name="ck_os_acrescimo_nao_negativo"),
-        CheckConstraint("total > 0", name="ck_os_total_maior_que_zero"),
+        CheckConstraint("total >= 0", name="ck_os_total_maior_ou_igual_a_zero"),
 
         Index("ix_os_cliente_id", "cliente_id"),
         Index("ix_os_veiculo_id", "veiculo_id"),

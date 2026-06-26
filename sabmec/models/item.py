@@ -31,6 +31,8 @@ class ItemMercadoria(db.Model):
     item_id = db.Column(db.Integer, db.ForeignKey("itens.id"), primary_key=True)
     estoque = db.Column(db.Integer, default=0)
     custo = db.Column(db.Numeric(10, 2), nullable=False)
+    ncm = db.Column(db.String(8), nullable=True)
+    origem = db.Column(db.String(1), nullable=True)
 
     item = db.relationship("Item", back_populates="mercadoria")
 

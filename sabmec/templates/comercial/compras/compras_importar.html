@@ -1,0 +1,206 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Importar XML NF-e - SabMec</title>
+    <style>
+        .text-sabmec { color: #9bc8f1 !important; }
+        .border-sabmec { border-color: #9bc8f1 !important; }
+
+        .upload-zone {
+            border: 2px dashed rgba(155, 200, 241, 0.35);
+            border-radius: 16px;
+            background: rgba(155, 200, 241, 0.04);
+            transition: border-color 0.25s, background 0.25s;
+            cursor: pointer;
+            min-height: 220px;
+        }
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: rgba(155, 200, 241, 0.75);
+            background: rgba(155, 200, 241, 0.09);
+        }
+        .upload-zone .upload-icon {
+            font-size: 3.5rem;
+            color: rgba(155, 200, 241, 0.5);
+            transition: color 0.2s, transform 0.2s;
+        }
+        .upload-zone:hover .upload-icon,
+        .upload-zone.dragover .upload-icon {
+            color: #9bc8f1;
+            transform: scale(1.08);
+        }
+        .file-selected-info {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .info-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+        }
+        .btn-upload {
+            background: linear-gradient(135deg, #9bc8f1, #5fa8d3);
+            color: #1a1d20;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            padding: 0.65rem 2rem;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .btn-upload:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            color: #1a1d20;
+        }
+        .btn-upload:disabled {
+            opacity: 0.45;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid px-4 mt-4 pb-5">
+
+        <!-- Cabeçalho -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('compras.compras') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h5 class="text-white fw-bold mb-0">
+                    <i class="bi bi-upload text-sabmec me-2"></i>Importar Nota Fiscal (XML)
+                </h5>
+                <span class="text-secondary small">Faça o upload do arquivo XML da NF-e para registrar uma entrada de mercadorias</span>
+            </div>
+        </div>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8 col-xl-6">
+
+                <form method="POST" action="{{ url_for('compras.compras_conferir') }}" enctype="multipart/form-data" id="formUploadXml">
+
+                    <!-- Área de Upload -->
+                    <div class="upload-zone d-flex flex-column align-items-center justify-content-center p-4 mb-4"
+                         id="uploadZone"
+                         onclick="document.getElementById('xmlFileInput').click()">
+
+                        <!-- Estado padrão -->
+                        <div id="uploadDefault" class="text-center">
+                            <i class="bi bi-file-earmark-code upload-icon d-block mb-3"></i>
+                            <h6 class="text-white mb-1 fw-semibold">Arraste o arquivo XML aqui</h6>
+                            <p class="text-secondary small mb-3">ou clique para selecionar o arquivo</p>
+                            <span class="badge border border-secondary text-secondary px-3 py-2">Somente arquivos .xml</span>
+                        </div>
+
+                        <!-- Estado após seleção -->
+                        <div id="uploadSelecionado" class="file-selected-info text-center">
+                            <i class="bi bi-file-earmark-check-fill text-success d-block mb-3" style="font-size: 3rem;"></i>
+                            <h6 class="text-white mb-1 fw-semibold" id="nomeArquivo">arquivo.xml</h6>
+                            <p class="text-secondary small mb-0" id="tamanhoArquivo">0 KB</p>
+                        </div>
+
+                        <input type="file" name="xml_file" id="xmlFileInput" accept=".xml" class="d-none">
+                    </div>
+
+                    <!-- Botão de Conferir -->
+                    <div class="d-flex justify-content-end gap-3">
+                        <a href="{{ url_for('compras.compras') }}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-upload" id="btnConferir" disabled>
+                            <i class="bi bi-search me-2"></i>Conferir Nota Fiscal
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Informações extras -->
+                <div class="info-card p-4 mt-4">
+                    <h6 class="text-white fw-semibold mb-3">
+                        <i class="bi bi-info-circle text-sabmec me-2"></i>O que será processado?
+                    </h6>
+                    <ul class="list-unstyled text-secondary small mb-0 d-flex flex-column gap-2">
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="bi bi-check-circle-fill text-success mt-1 flex-shrink-0"></i>
+                            <span><strong class="text-white">Fornecedor:</strong> Cadastrado automaticamente se não existir no sistema</span>
+                        </li>
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="bi bi-check-circle-fill text-success mt-1 flex-shrink-0"></i>
+                            <span><strong class="text-white">Produtos:</strong> Sugestão de vínculo com itens existentes ou criação de novos</span>
+                        </li>
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="bi bi-check-circle-fill text-success mt-1 flex-shrink-0"></i>
+                            <span><strong class="text-white">Estoque:</strong> Atualizado automaticamente após confirmação</span>
+                        </li>
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="bi bi-check-circle-fill text-success mt-1 flex-shrink-0"></i>
+                            <span><strong class="text-white">Contas a Pagar:</strong> Geradas com base nas duplicatas da nota fiscal</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const xmlFileInput = document.getElementById('xmlFileInput');
+        const uploadDefault = document.getElementById('uploadDefault');
+        const uploadSelecionado = document.getElementById('uploadSelecionado');
+        const nomeArquivo = document.getElementById('nomeArquivo');
+        const tamanhoArquivo = document.getElementById('tamanhoArquivo');
+        const btnConferir = document.getElementById('btnConferir');
+
+        function mostrarArquivo(file) {
+            nomeArquivo.textContent = file.name;
+            const kb = (file.size / 1024).toFixed(1);
+            tamanhoArquivo.textContent = kb + ' KB';
+            uploadDefault.style.display = 'none';
+            uploadSelecionado.style.display = 'block';
+            btnConferir.disabled = false;
+        }
+
+        xmlFileInput.addEventListener('change', function () {
+            if (this.files.length > 0) {
+                mostrarArquivo(this.files[0]);
+            }
+        });
+
+        // Drag and Drop
+        uploadZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+        uploadZone.addEventListener('dragleave', function () {
+            this.classList.remove('dragover');
+        });
+        uploadZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].name.endsWith('.xml')) {
+                const dt = new DataTransfer();
+                dt.items.add(files[0]);
+                xmlFileInput.files = dt.files;
+                mostrarArquivo(files[0]);
+            } else {
+                alert('Por favor, arraste apenas arquivos .xml');
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,296 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Compras (Entradas) - SabMec</title>
+    <style>
+        .card-linha {
+            position: relative !important;
+            z-index: 1 !important;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .card-linha:hover {
+            border-color: rgba(155, 200, 241, 0.4) !important;
+            box-shadow: 0 4px 16px rgba(155, 200, 241, 0.08) !important;
+            z-index: 5 !important;
+        }
+        .badge-status {
+            font-size: 0.65rem;
+            letter-spacing: 0.04em;
+        }
+        .text-sabmec { color: #9bc8f1 !important; }
+        .valor-nf {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #9bc8f1;
+        }
+        .info-secundaria {
+            font-size: 0.82rem;
+            color: #adb5bd;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid px-4 mt-4 pb-5">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h5 class="text-white fw-bold mb-0">
+                    <i class="bi bi-truck text-sabmec me-2"></i>Compras (Entradas)
+                </h5>
+                <span class="text-secondary small">Notas fiscais importadas por XML</span>
+            </div>
+            <a href="{{ url_for('compras.compras_importar') }}" class="btn btn-sm btn-primary d-flex align-items-center gap-2">
+                <i class="bi bi-upload"></i>
+                <span class="d-none d-sm-inline">Importar XML</span>
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <nav class="grade-navbar mb-4">
+            <form method="GET" action="{{ url_for('compras.compras') }}">
+                <input type="hidden" name="pesquisar" value="1">
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-md">
+                        <label class="label-filter">Nota fiscal</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-secondary" style="border-color: #3d4246 !important;">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input
+                                type="text"
+                                name="busca"
+                                class="form-control form-control-custom"
+                                placeholder="Buscar por nota, fornecedor ou chave..."
+                                value="{{ busca or '' }}"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="col-md-2" style="max-width: 180px;">
+                        <label class="label-filter">De:</label>
+                        <input type="date" name="data_inicio" class="form-control form-control-custom" value="{{ data_inicio or '' }}">
+                    </div>
+
+                    <div class="col-md-2" style="max-width: 180px;">
+                        <label class="label-filter">Até:</label>
+                        <input type="date" name="data_fim" class="form-control form-control-custom" value="{{ data_fim or '' }}">
+                    </div>
+
+                    <div class="col-md-auto d-flex gap-2">
+                        <button type="submit" class="btn btn-outline-light px-4 fw-bold" style="height: 45px;">
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-3 align-items-end mt-1">
+                    <div class="col-md-4">
+                        <label class="label-filter">Buscar por</label>
+                        <div class="d-flex gap-3 mt-1 flex-wrap">
+                            {% set is_nota = 'checked' if (tipo_busca == 'nota' or not tipo_busca) else '' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_busca" value="nota" {{ is_nota }}>
+                                <label class="form-check-label text-light small">Número</label>
+                            </div>
+
+                            {% set is_fornecedor = 'checked' if tipo_busca == 'fornecedor' else '' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_busca" value="fornecedor" {{ is_fornecedor }}>
+                                <label class="form-check-label text-light small">Fornecedor</label>
+                            </div>
+
+                            {% set is_chave = 'checked' if tipo_busca == 'chave' else '' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_busca" value="chave" {{ is_chave }}>
+                                <label class="form-check-label text-light small">Chave</label>
+                            </div>
+
+                            {% set is_geral = 'checked' if tipo_busca == 'geral' else '' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_busca" value="geral" {{ is_geral }}>
+                                <label class="form-check-label text-light small">Geral</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2" style="min-width: 180px;">
+                        <label class="label-filter">Status</label>
+                        <select name="status" class="form-select form-control-custom">
+                            <option value="" {{ 'selected' if not status else '' }}>Todos</option>
+                            <option value="PENDENTE" {{ 'selected' if status == 'PENDENTE' else '' }}>Pendente</option>
+                            <option value="CONFIRMADA" {{ 'selected' if status == 'CONFIRMADA' else '' }}>Confirmada</option>
+                            <option value="CANCELADA" {{ 'selected' if status == 'CANCELADA' else '' }}>Cancelada</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </nav>
+
+        {% if compras %}
+            <div class="row g-2">
+                {% for compra in compras %}
+                    {% set status_compra = compra.status or 'PENDENTE' %}
+                    <div class="col-12">
+                        <div class="card card-linha bg-dark border-secondary text-light shadow-sm">
+                            <div class="card-body py-3 px-3">
+                                <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="badge bg-secondary text-light badge-status">NF #{{ compra.numero_nota }}</span>
+                                        <span class="badge border border-secondary text-secondary badge-status">Série {{ compra.serie_nota or '1' }}</span>
+
+                                        {% if status_compra == 'PENDENTE' %}
+                                            <span class="badge border border-warning text-warning badge-status">Pendente</span>
+                                        {% elif status_compra == 'CONFIRMADA' %}
+                                            <span class="badge border border-success text-success badge-status">Confirmada</span>
+                                        {% elif status_compra == 'CANCELADA' %}
+                                            <span class="badge border border-danger text-danger badge-status">Cancelada</span>
+                                        {% endif %}
+
+                                        <h6 class="mb-0 fw-semibold text-white">
+                                            {{ compra.fornecedor.nome if compra.fornecedor else '---' }}
+                                        </h6>
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="valor-nf">R$ {{ '%.2f'|format(compra.valor_total or 0)|replace('.', ',') }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between gap-3 mt-2 flex-wrap">
+                                    <div class="d-flex flex-wrap gap-3">
+                                        <span class="info-secundaria">
+                                            <i class="bi bi-calendar3 me-1"></i>
+                                            Emissão: {{ compra.data_emissao.strftime('%d/%m/%Y') if compra.data_emissao else '---' }}
+                                        </span>
+                                        <span class="info-secundaria">
+                                            <i class="bi bi-box-arrow-in-down me-1"></i>
+                                            Entrada: {{ compra.data_entrada.strftime('%d/%m/%Y %H:%M') if compra.data_entrada else '---' }}
+                                        </span>
+                                        <span class="info-secundaria">
+                                            <i class="bi bi-boxes me-1"></i>
+                                            {{ compra.itens|length }} item(ns)
+                                        </span>
+                                        {% if compra.chave_acesso %}
+                                            <span class="info-secundaria d-none d-md-inline">
+                                                <i class="bi bi-key me-1"></i>
+                                                Chave: {{ compra.chave_acesso[:20] }}...
+                                            </span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="d-flex gap-2 ms-auto">
+                                        {% if status_compra == 'PENDENTE' %}
+                                            <a href="{{ url_for('compras.compras_conferir_nota', id=compra.id) }}" class="btn btn-outline-info btn-sm px-3">
+                                                <i class="bi bi-link-45deg"></i>
+                                                <span class="d-none d-md-inline ms-1">Vincular</span>
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ url_for('compras.compras_conferir_nota', id=compra.id) }}" class="btn btn-outline-light btn-sm px-3">
+                                                <i class="bi bi-eye"></i>
+                                                <span class="d-none d-md-inline ms-1">Ver</span>
+                                            </a>
+                                        {% endif %}
+
+                                        {% if status_compra != 'CANCELADA' %}
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-danger btn-sm px-3"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalCancelarCompra{{ compra.id }}"
+                                            >
+                                                <i class="bi bi-x-circle"></i>
+                                                <span class="d-none d-md-inline ms-1">Cancelar</span>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="modalCancelarCompra{{ compra.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content bg-dark text-white border-secondary">
+                                <div class="modal-header border-secondary">
+                                    <h5 class="modal-title">Cancelar NF #{{ compra.numero_nota }}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <p class="mb-2">Tem certeza que deseja cancelar esta entrada?</p>
+                                    <p class="mb-2">
+                                        Fornecedor:
+                                        <strong>{{ compra.fornecedor.nome if compra.fornecedor else '---' }}</strong>
+                                    </p>
+                                    <p class="mb-2">
+                                        Valor:
+                                        <strong>R$ {{ '%.2f'|format(compra.valor_total or 0)|replace('.', ',') }}</strong>
+                                    </p>
+
+                                    {% if status_compra == 'CONFIRMADA' %}
+                                        <p class="text-warning small mb-0">
+                                            O estoque lançado e as contas a pagar desta compra serão estornados.
+                                        </p>
+                                    {% else %}
+                                        <p class="text-secondary small mb-0">
+                                            Como esta nota ainda está pendente, nenhum estoque foi lançado.
+                                        </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="modal-footer border-secondary">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                        Voltar
+                                    </button>
+
+                                    <form method="POST" action="{{ url_for('compras.compras_cancelar', id=compra.id) }}">
+                                        {% if csrf_token is defined %}
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        {% endif %}
+
+                                        <button type="submit" class="btn btn-danger">
+                                            Confirmar Cancelamento
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center">
+                <div class="rounded-circle bg-dark border border-secondary d-flex align-items-center justify-content-center mb-4"
+                     style="width: 80px; height: 80px;">
+                    <i class="bi bi-truck fs-2 text-secondary"></i>
+                </div>
+                {% if not request.args.get('pesquisar') %}
+                    <h6 class="text-white mb-2">Pesquise para listar as entradas</h6>
+                    <p class="text-secondary small mb-3">Use os filtros acima ou importe um XML de nota fiscal.</p>
+                {% elif busca or status or data_inicio or data_fim %}
+                    <h6 class="text-white mb-2">Nenhuma compra encontrada</h6>
+                    <p class="text-secondary small mb-3">Tente ajustar os filtros de busca.</p>
+                    <a href="{{ url_for('compras.compras') }}" class="btn btn-sm btn-outline-secondary">Limpar filtros</a>
+                {% else %}
+                    <h6 class="text-white mb-2">Nenhuma entrada registrada</h6>
+                    <p class="text-secondary small mb-3">Importe um XML de nota fiscal para registrar uma entrada.</p>
+                    <a href="{{ url_for('compras.compras_importar') }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-upload me-2"></i>Importar XML NF-e
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

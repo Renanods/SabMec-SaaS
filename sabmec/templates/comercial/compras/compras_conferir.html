@@ -1,0 +1,531 @@
+{% extends 'bases/base.html' %}
+
+{% block head %}
+    <title>Conferir NF-e - SabMec</title>
+    <style>
+        .text-sabmec { color: #9bc8f1 !important; }
+        .section-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px;
+        }
+        .section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #9bc8f1;
+        }
+        .info-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .info-value {
+            font-size: 0.92rem;
+            color: #dee2e6;
+            font-weight: 500;
+        }
+        .item-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 10px;
+            transition: border-color 0.2s;
+        }
+        .item-card:hover {
+            border-color: rgba(155, 200, 241, 0.3);
+        }
+        .item-index {
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: rgba(155, 200, 241, 0.12);
+            color: #9bc8f1;
+            border-radius: 6px;
+            padding: 2px 8px;
+        }
+        .badge-acao-criar { background: rgba(25, 135, 84, 0.15); color: #69db7c; border: 1px solid rgba(25, 135, 84, 0.3); }
+        .badge-acao-vincular { background: rgba(13, 110, 253, 0.15); color: #74c0fc; border: 1px solid rgba(13, 110, 253, 0.3); }
+        .acao-selector {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .acao-btn {
+            border-radius: 20px;
+            font-size: 0.78rem;
+            padding: 4px 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: transparent;
+            color: #adb5bd;
+            font-weight: 500;
+        }
+        .acao-btn.active-criar {
+            background: rgba(25, 135, 84, 0.18);
+            border-color: #69db7c;
+            color: #69db7c;
+        }
+        .acao-btn.active-vincular {
+            background: rgba(13, 110, 253, 0.18);
+            border-color: #74c0fc;
+            color: #74c0fc;
+        }
+        .vinculo-area {
+            display: none;
+            animation: fadeIn 0.2s;
+        }
+        .vinculo-area.show { display: flex; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .valor-total-nf {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #9bc8f1;
+        }
+        .btn-confirmar {
+            background: linear-gradient(135deg, #9bc8f1, #5fa8d3);
+            color: #1a1d20;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            padding: 0.7rem 2.5rem;
+            font-size: 1rem;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .btn-confirmar:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            color: #1a1d20;
+        }
+        .tag-ncm {
+            font-family: monospace;
+            font-size: 0.78rem;
+            background: rgba(255,255,255,0.06);
+            padding: 1px 6px;
+            border-radius: 4px;
+            color: #adb5bd;
+        }
+        .fornecedor-badge-novo {
+            background: rgba(255, 193, 7, 0.12);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            color: #ffd43b;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            padding: 2px 10px;
+        }
+        .fornecedor-badge-existente {
+            background: rgba(25, 135, 84, 0.12);
+            border: 1px solid rgba(25, 135, 84, 0.3);
+            color: #69db7c;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            padding: 2px 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid px-4 mt-4 pb-5">
+
+        <!-- Cabeçalho -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('compras.compras', pesquisar=1, tipo_busca='nota', busca=compra.numero_nota) }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div class="flex-grow-1">
+                <h5 class="text-white fw-bold mb-0">
+                    <i class="bi bi-clipboard-check text-sabmec me-2"></i>Conferir Nota Fiscal
+                </h5>
+                <span class="text-secondary small">NF {{ dados.numero_nota }} / Série {{ dados.serie }}</span>
+            </div>
+            <div class="text-end d-none d-md-block">
+                <div class="info-label">Valor Total da NF</div>
+                <div class="valor-total-nf">R$ {{ '%.2f'|format(dados.valor_total) }}</div>
+            </div>
+        </div>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('compras.compras_confirmar', id=compra.id) }}" id="formConfirmar">
+            {# Campos hidden para transportar os dados da NF-e sem depender de sessão #}
+
+            <div class="row g-3">
+
+                <!-- Dados da Nota e Fornecedor -->
+                <div class="col-12 col-lg-5">
+
+                    <!-- Card NF -->
+                    <div class="section-card p-3 mb-3">
+                        <div class="section-title mb-3">
+                            <i class="bi bi-file-text me-2"></i>Dados da Nota Fiscal
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="info-label">Número</div>
+                                <div class="info-value">{{ dados.numero_nota }}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="info-label">Série</div>
+                                <div class="info-value">{{ dados.serie }}</div>
+                            </div>
+                            <div class="col-12">
+                                <div class="info-label mt-2">Data de Emissão</div>
+                                <div class="info-value">
+                                    {% set dt_str = dados.data_emissao %}
+                                    {{ dt_str[:10] if dt_str else '---' }}
+                                </div>
+                            </div>
+                            <div class="col-6 mt-1">
+                                <div class="info-label">Valor Produtos</div>
+                                <div class="info-value text-warning">R$ {{ '%.2f'|format(dados.valor_produtos) }}</div>
+                            </div>
+                            <div class="col-6 mt-1">
+                                <div class="info-label">Valor Total NF</div>
+                                <div class="info-value text-sabmec">R$ {{ '%.2f'|format(dados.valor_total) }}</div>
+                            </div>
+                            {% if dados.chave_acesso %}
+                                <div class="col-12 mt-1">
+                                    <div class="info-label">Chave de Acesso</div>
+                                    <div class="info-value" style="font-size:0.7rem; word-break:break-all; font-family: monospace;">
+                                        {{ dados.chave_acesso }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Card Fornecedor -->
+                    <div class="section-card p-3 mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="section-title">
+                                <i class="bi bi-building me-2"></i>Fornecedor
+                            </div>
+                            {% if fornecedor_status == 'Existente' %}
+                                <span class="fornecedor-badge-existente">
+                                    <i class="bi bi-check-circle me-1"></i>Cadastrado
+                                </span>
+                            {% else %}
+                                <span class="fornecedor-badge-novo">
+                                    <i class="bi bi-plus-circle me-1"></i>Será Cadastrado
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <div class="info-label">Razão Social</div>
+                                <div class="info-value">{{ dados.fornecedor.nome }}</div>
+                            </div>
+                            {% if dados.fornecedor.nome_fantasia %}
+                                <div class="col-12">
+                                    <div class="info-label">Nome Fantasia</div>
+                                    <div class="info-value">{{ dados.fornecedor.nome_fantasia }}</div>
+                                </div>
+                            {% endif %}
+                            <div class="col-7">
+                                <div class="info-label mt-1">CNPJ</div>
+                                <div class="info-value">{{ dados.fornecedor.cnpj or '---' }}</div>
+                            </div>
+                            <div class="col-5">
+                                <div class="info-label mt-1">IE</div>
+                                <div class="info-value">{{ dados.fornecedor.ie or '---' }}</div>
+                            </div>
+                            {% if dados.fornecedor.x_mun %}
+                                <div class="col-12">
+                                    <div class="info-label mt-1">Município</div>
+                                    <div class="info-value">{{ dados.fornecedor.x_mun }} / {{ dados.fornecedor.uf }}</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Card Duplicatas -->
+                    {% if dados.duplicatas %}
+                        <div class="section-card p-3">
+                            <div class="section-title mb-3">
+                                <i class="bi bi-calendar-week me-2"></i>Parcelas (Contas a Pagar)
+                            </div>
+                            <div class="d-flex flex-column gap-2">
+                                {% for dup in dados.duplicatas %}
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="badge bg-secondary me-2">Dup. {{ dup.numero }}</span>
+                                            <span class="info-value small">Venc: {{ dup.vencimento }}</span>
+                                        </div>
+                                        <span class="text-warning fw-semibold small">R$ {{ '%.2f'|format(dup.valor) }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="section-card p-3">
+                            <div class="section-title mb-2">
+                                <i class="bi bi-calendar-week me-2"></i>Parcelas (Contas a Pagar)
+                            </div>
+                            <p class="text-secondary small mb-0">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Sem duplicatas no XML. Será gerada 1 parcela no valor total com vencimento para hoje.
+                            </p>
+                        </div>
+                    {% endif %}
+
+                </div>
+
+                <!-- Itens da Nota -->
+                <div class="col-12 col-lg-7">
+                    <div class="section-card p-3">
+                        <div class="section-title mb-3">
+                            <i class="bi bi-boxes me-2"></i>Itens da Nota ({{ itens|length }})
+                        </div>
+
+                        <div class="d-flex flex-column gap-3">
+                            {% for item in itens %}
+                                <div class="item-card p-3">
+                                    <!-- Cabeçalho do item -->
+                                    <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap flex-grow-1">
+                                            <span class="item-index">{{ loop.index }}</span>
+                                            <span class="text-white fw-semibold" style="font-size: 0.88rem;">
+                                                {{ item.descricao }}
+                                            </span>
+                                        </div>
+                                        <div class="text-end flex-shrink-0">
+                                            <div class="info-label">Total</div>
+                                            <div class="text-warning fw-bold small">R$ {{ '%.2f'|format(item.valor_total) }}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Infos do item -->
+                                    <div class="d-flex flex-wrap gap-3 mb-3">
+                                        <div>
+                                            <span class="info-label d-block">Qtd</span>
+                                            <span class="info-value small">{{ item.quantidade }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="info-label d-block">Vlr. Unit.</span>
+                                            <span class="info-value small">R$ {{ '%.2f'|format(item.valor_unitario) }}</span>
+                                        </div>
+                                        {% if item.ncm %}
+                                            <div>
+                                                <span class="info-label d-block">NCM</span>
+                                                <span class="tag-ncm">{{ item.ncm }}</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if item.origem %}
+                                            <div>
+                                                <span class="info-label d-block">Origem</span>
+                                                <span class="info-value small">
+                                                    {% if item.origem == '0' %}Nacional
+                                                    {% elif item.origem == '1' %}Estrangeira (Importação direta)
+                                                    {% elif item.origem == '2' %}Estrangeira (Adquirida no mercado interno)
+                                                    {% else %}{{ item.origem }}{% endif %}
+                                                </span>
+                                            </div>
+                                        {% endif %}
+                                        {% if item.codigo_fornecedor %}
+                                            <div>
+                                                <span class="info-label d-block">Cód. Fornecedor</span>
+                                                <span class="info-value small">{{ item.codigo_fornecedor }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Seleção de Ação: Criar Novo ou Vincular -->
+                                    <input type="hidden" name="acao_item_{{ item.index }}" id="acao_{{ item.index }}" value="{{ 'vincular' if item.sugestao_id else 'criar_novo' }}">
+
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="info-label flex-shrink-0">Ação:</span>
+                                        <div class="acao-selector">
+                                            <button type="button"
+                                                    class="acao-btn {{ 'active-criar' if not item.sugestao_id else '' }}"
+                                                    id="btn-criar-{{ item.index }}"
+                                                    onclick="definirAcao({{ item.index }}, 'criar_novo')">
+                                                <i class="bi bi-plus-circle me-1"></i>Criar Novo
+                                            </button>
+                                            <button type="button"
+                                                    class="acao-btn {{ 'active-vincular' if item.sugestao_id else '' }}"
+                                                    id="btn-vincular-{{ item.index }}"
+                                                    onclick="definirAcao({{ item.index }}, 'vincular')">
+                                                <i class="bi bi-link-45deg me-1"></i>Vincular Produto
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Área de vínculo com produto existente -->
+                                    <div class="vinculo-area {{ 'show' if item.sugestao_id else '' }} align-items-center gap-2 mt-3 flex-wrap"
+                                         id="vinculo-area-{{ item.index }}">
+
+                                        <span class="info-label flex-shrink-0">Produto no sistema:</span>
+
+                                        <div class="d-flex align-items-center gap-2 flex-grow-1 flex-wrap">
+                                            <input type="hidden"
+                                                   name="vinculo_item_id_{{ item.index }}"
+                                                   id="vinculo_id_{{ item.index }}"
+                                                   value="{{ item.sugestao_id or '' }}">
+
+                                            <input type="text"
+                                                   class="form-control form-control-sm bg-dark border-secondary text-light"
+                                                   id="vinculo_nome_{{ item.index }}"
+                                                   placeholder="Pesquisar produto..."
+                                                   value="{{ item.sugestao_nome or '' }}"
+                                                   autocomplete="off"
+                                                   oninput="buscarProdutos(this, {{ item.index }})"
+                                                   style="max-width: 360px;">
+
+                                            <div class="dropdown-menu bg-dark border-secondary p-1 shadow"
+                                                 id="dropdown-{{ item.index }}"
+                                                 style="display: none; position: absolute; z-index: 9999; min-width: 300px; max-height: 200px; overflow-y: auto;">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {% if item.sugestao_id %}
+                                        <div class="mt-2">
+                                            <span class="badge badge-acao-vincular px-2 py-1">
+                                                <i class="bi bi-link me-1"></i>Sugestão: {{ item.sugestao_nome }}
+                                            </span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Rodapé / Botão de Confirmar -->
+            <div class="d-flex align-items-center justify-content-between mt-4 p-3 section-card flex-wrap gap-3">
+                <div>
+                    <div class="text-secondary small">Total da nota fiscal</div>
+                    <div class="valor-total-nf">R$ {{ '%.2f'|format(dados.valor_total) }}</div>
+                </div>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('compras.compras', pesquisar=1, tipo_busca='nota', busca=compra.numero_nota) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Voltar
+                    </a>
+                    {% if compra.status == 'PENDENTE' %}
+                        <button type="submit" class="btn btn-confirmar" onclick="return confirmarEnvio()">
+                            <i class="bi bi-check2-circle me-2"></i>Confirmar e Registrar Entrada
+                        </button>
+                    {% else %}
+                        <span class="badge border border-secondary text-secondary px-3 py-2">
+                            {{ compra.status }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <script>
+        function definirAcao(index, acao) {
+            const hidden = document.getElementById('acao_' + index);
+            const btnCriar = document.getElementById('btn-criar-' + index);
+            const btnVincular = document.getElementById('btn-vincular-' + index);
+            const vinculoArea = document.getElementById('vinculo-area-' + index);
+
+            hidden.value = acao;
+
+            btnCriar.classList.remove('active-criar', 'active-vincular');
+            btnVincular.classList.remove('active-criar', 'active-vincular');
+
+            if (acao === 'criar_novo') {
+                btnCriar.classList.add('active-criar');
+                vinculoArea.classList.remove('show');
+            } else {
+                btnVincular.classList.add('active-vincular');
+                vinculoArea.classList.add('show');
+            }
+        }
+
+        // Busca AJAX de produtos - usa a rota existente /os/buscar-itens
+        let searchTimeout = null;
+
+        function buscarProdutos(input, index) {
+            const termo = input.value.trim();
+            const dropdown = document.getElementById('dropdown-' + index);
+
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            if (termo.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(function () {
+                fetch('/os/buscar-itens?q=' + encodeURIComponent(termo) + '&tipo_busca=nome')
+                    .then(r => r.json())
+                    .then(data => {
+                        const itens = data.itens || [];
+                        dropdown.innerHTML = '';
+                        // Filtrar apenas tipo Produto
+                        const produtos = itens.filter(i => i.tipo === 'Produto');
+                        if (produtos.length === 0) {
+                            dropdown.innerHTML = '<div class="text-secondary small px-3 py-2">Nenhum produto encontrado</div>';
+                        } else {
+                            produtos.forEach(item => {
+                                const div = document.createElement('div');
+                                div.className = 'dropdown-item text-light rounded cursor-pointer py-2 px-3';
+                                div.style.cursor = 'pointer';
+                                div.style.fontSize = '0.85rem';
+                                div.innerHTML = '<i class="bi bi-box-seam me-2 text-sabmec"></i>' + item.nome;
+                                div.addEventListener('click', function () {
+                                    document.getElementById('vinculo_id_' + index).value = item.id;
+                                    document.getElementById('vinculo_nome_' + index).value = item.nome;
+                                    dropdown.style.display = 'none';
+                                });
+                                dropdown.appendChild(div);
+                            });
+                        }
+
+                        // Posicionar dropdown relativo ao input
+                        dropdown.style.top = (input.offsetTop + input.offsetHeight) + 'px';
+                        dropdown.style.left = input.offsetLeft + 'px';
+                        dropdown.style.display = 'block';
+                    })
+                    .catch(() => { dropdown.style.display = 'none'; });
+            }, 280);
+        }
+
+        // Fechar dropdowns ao clicar fora
+        document.addEventListener('click', function (e) {
+            document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
+                if (!d.contains(e.target)) {
+                    d.style.display = 'none';
+                }
+            });
+        });
+
+        function confirmarEnvio() {
+            // Validar que todos itens com ação "vincular" têm um produto selecionado
+            const acoes = document.querySelectorAll('[id^="acao_"]');
+            for (const acao of acoes) {
+                const index = acao.id.replace('acao_', '');
+                if (acao.value === 'vincular') {
+                    const vinculoId = document.getElementById('vinculo_id_' + index);
+                    if (!vinculoId || !vinculoId.value) {
+                        alert('Você escolheu "Vincular Produto" para o item ' + (parseInt(index) + 1) + ' mas não selecionou nenhum produto. Selecione um produto ou troque a ação para "Criar Novo".');
+                        return false;
+                    }
+                }
+            }
+            return confirm('Deseja confirmar a entrada desta nota fiscal? Estoque e contas a pagar serão atualizados.');
+        }
+    </script>
+{% endblock %}

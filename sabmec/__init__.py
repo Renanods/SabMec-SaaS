@@ -23,8 +23,10 @@ from sabmec.models.cond_forma_pgto import FormaPagamento, CondicaoPagamento, Con
 from sabmec.models.ordem_servico import OrdemServico, OrdemServicoItem, OrdemServicoPagamento, OrdemServicoParcela
 from sabmec.models.tipos import Status
 from sabmec.models.contas_receber import ContaReceber, ContaReceberBaixa
+from sabmec.models.contas_pagar import ContaPagar, ContaPagarBaixa
 from sabmec.models.config import ConfiguracaoOs
 from sabmec.models.agendamento import Agendamento
+from sabmec.models.compra import Compra, CompraItem
 
 @login_manager.user_loader
 def load_usuario(id_usuario):
@@ -43,9 +45,11 @@ from sabmec.routes.cadastros.veiculos import veiculos_bp
 from sabmec.routes.comercial.os.os import os_bp
 from sabmec.routes.cadastros.condicao_pagamento import condicao_pgto_bp
 from sabmec.routes.financeiro.contas_receber import contas_receber_bp
+from sabmec.routes.financeiro.contas_pagar import contas_pagar_bp
 from sabmec.routes.impressoes.comercial.impressao_os import impressao_os_bp
 from sabmec.routes.configuracao.config import configuracoes_bp
 from sabmec.routes.comercial.agendamentos.agendamentos import agendamentos_bp
+from sabmec.routes.comercial.compras.compras import compras_bp
 
 app.register_blueprint(auth_bp) # Autenticação (Login, Logoff)
 app.register_blueprint(main_bp) # Home e Dashboard
@@ -55,9 +59,11 @@ app.register_blueprint(veiculos_bp) # Cadastros de veículos
 app.register_blueprint(os_bp) # Ordem de serviço
 app.register_blueprint(condicao_pgto_bp) # Cadastro de condições de pgto
 app.register_blueprint(contas_receber_bp) # Contas a receber
+app.register_blueprint(contas_pagar_bp) # Contas a pagar
 app.register_blueprint(impressao_os_bp) # Impressões da OS
 app.register_blueprint(configuracoes_bp) # Configurações
 app.register_blueprint(agendamentos_bp) # Configurações
+app.register_blueprint(compras_bp) # Compras / Entradas
 
 @app.context_processor
 def inject_empresa_sidebar():

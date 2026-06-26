@@ -75,11 +75,13 @@
 
 {% set comercial_aberto =
     endpoint.startswith('os.') or
-    endpoint.startswith('agendamentos.')
+    endpoint.startswith('agendamentos.') or
+    endpoint.startswith('compras.')
 %}
 
 {% set financeiro_aberto =
-    endpoint.startswith('contas_receber.')
+    endpoint.startswith('contas_receber.') or
+    endpoint.startswith('contas_pagar.')
 %}
 
 <nav id="sidebarMenu" class="offcanvas-md offcanvas-start col-md-3 col-lg-2 bg-dark border-end border-secondary border-opacity-25 p-0 shadow-lg d-md-flex flex-column overflow-y-auto" tabindex="-1" aria-labelledby="sidebarMenuLabel">
@@ -105,7 +107,7 @@
                 {{ empresa_sidebar.nome_fantasia or empresa_sidebar.nome if empresa_sidebar else 'Sem Empresa' }}
             </span>
         </div>
-        
+
         <!-- Bloco para Mobile: Mostra a empresa sem o título "SabMec" que já está no Offcanvas Header -->
         <div class="px-4 mb-4 d-md-none">
             <span class="text-secondary small fw-light">
@@ -134,6 +136,7 @@
                     </a>
                 </li>
 
+                <!-- Menu Cadastros -->
                 <li class="nav-item">
 
                     <a class="nav-link rounded-3 py-2 px-3 d-flex align-items-center justify-content-between {{ 'bg-sabmec-active' if cadastros_aberto else 'text-secondary hover-sidebar' }}"
@@ -196,6 +199,7 @@
                     </div>
                 </li>
 
+                <!-- Menu Comercial -->
                 <li class="nav-item">
 
                     <a class="nav-link rounded-3 py-2 px-3 d-flex align-items-center justify-content-between {{ 'bg-sabmec-active' if comercial_aberto else 'text-secondary hover-sidebar' }}"
@@ -236,10 +240,20 @@
                                 </a>
                             </li>
 
+                            <li class="nav-item">
+                                <a class="nav-link rounded-3 py-2 submenu-link {{ 'bg-sabmec-active' if endpoint.startswith('compras.') else 'text-secondary hover-sidebar' }}"
+                                   href="{{ url_for('compras.compras') }}">
+
+                                    <i class="bi bi-truck me-3 fs-5"></i>
+                                    Compras (Entradas)
+                                </a>
+                            </li>
+
                         </ul>
                     </div>
                 </li>
 
+                <!-- Menu Financeiro -->
                 <li class="nav-item">
 
                     <a class="nav-link rounded-3 py-2 px-3 d-flex align-items-center justify-content-between {{ 'bg-sabmec-active' if financeiro_aberto else 'text-secondary hover-sidebar' }}"
@@ -268,6 +282,15 @@
 
                                     <i class="bi bi-cash me-3 fs-5"></i>
                                     Contas a Receber
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link rounded-3 py-2 submenu-link {{ 'bg-sabmec-active' if endpoint.startswith('contas_pagar.') else 'text-secondary hover-sidebar' }}"
+                                   href="{{ url_for('contas_pagar.contas_pagar') }}">
+
+                                    <i class="bi bi-wallet2 me-3 fs-5"></i>
+                                    Contas a Pagar
                                 </a>
                             </li>
 

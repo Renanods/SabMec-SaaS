@@ -9,6 +9,8 @@
                 <label class="label-filter">
                     {% if os %}
                         Cliente
+                    {% elif financeiro_pagar %}
+                        Conta a pagar
                     {% elif financeiro %}
                         Conta a receber
                     {% else %}
@@ -118,8 +120,15 @@
 
                         <select name="origem" class="form-select form-control-custom">
                             <option value="" {{ 'selected' if not origem else '' }}>Todas</option>
-                            <option value="OS" {{ 'selected' if origem == 'OS' else '' }}>Ordem de Serviço</option>
-                            <option value="VENDA" {{ 'selected' if origem == 'VENDA' else '' }}>Venda</option>
+
+                            {% if financeiro_pagar %}
+                                <option value="COMPRA" {{ 'selected' if origem == 'COMPRA' else '' }}>Compra</option>
+                                <option value="DESPESA" {{ 'selected' if origem == 'DESPESA' else '' }}>Despesa</option>
+                            {% else %}
+                                <option value="OS" {{ 'selected' if origem == 'OS' else '' }}>Ordem de Serviço</option>
+                                <option value="VENDA" {{ 'selected' if origem == 'VENDA' else '' }}>Venda</option>
+                            {% endif %}
+
                             <option value="AVULSO" {{ 'selected' if origem == 'AVULSO' else '' }}>Avulso</option>
                         </select>
                     </div>
@@ -128,10 +137,12 @@
                         <label class="label-filter">Buscar por</label>
 
                         <div class="d-flex gap-3 mt-1 flex-wrap">
-                            {% set is_cliente = 'checked' if (tipo_busca == 'cliente' or not tipo_busca) else '' %}
+                            {% set pessoa_value = 'fornecedor' if financeiro_pagar else 'cliente' %}
+                            {% set pessoa_label = 'Fornecedor' if financeiro_pagar else 'Cliente' %}
+                            {% set is_pessoa = 'checked' if (tipo_busca == pessoa_value or not tipo_busca) else '' %}
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="tipo_busca" value="cliente" {{ is_cliente }}>
-                                <label class="form-check-label text-light small">Cliente</label>
+                                <input class="form-check-input" type="radio" name="tipo_busca" value="{{ pessoa_value }}" {{ is_pessoa }}>
+                                <label class="form-check-label text-light small">{{ pessoa_label }}</label>
                             </div>
 
                             {% set is_descricao = 'checked' if tipo_busca == 'descricao' else '' %}
@@ -140,17 +151,27 @@
                                 <label class="form-check-label text-light small">Descrição</label>
                             </div>
 
-                            {% set is_referencia = 'checked' if tipo_busca == 'referencia' else '' %}
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="tipo_busca" value="referencia" {{ is_referencia }}>
-                                <label class="form-check-label text-light small">Identificador</label>
-                            </div>
+                            {% if not financeiro_pagar %}
+                                {% set is_referencia = 'checked' if tipo_busca == 'referencia' else '' %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="tipo_busca" value="referencia" {{ is_referencia }}>
+                                    <label class="form-check-label text-light small">Identificador</label>
+                                </div>
+                            {% endif %}
 
                             {% set is_documento = 'checked' if tipo_busca == 'documento' else '' %}
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="tipo_busca" value="documento" {{ is_documento }}>
-                                <label class="form-check-label text-light small">CPF/CNPJ</label>
+                                <label class="form-check-label text-light small">{{ 'Documento' if financeiro_pagar else 'CPF/CNPJ' }}</label>
                             </div>
+
+                            {% if financeiro_pagar %}
+                                {% set is_cpf_cnpj = 'checked' if tipo_busca == 'cpf_cnpj' else '' %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="tipo_busca" value="cpf_cnpj" {{ is_cpf_cnpj }}>
+                                    <label class="form-check-label text-light small">CPF/CNPJ</label>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                 {% endif %}

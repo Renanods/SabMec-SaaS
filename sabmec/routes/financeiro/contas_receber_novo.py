@@ -60,31 +60,37 @@ def contas_receber_novo():
         flash("Cadastre o status PENDENTE antes de criar contas a receber.", "danger")
         return redirect(url_for("contas_receber.contas_receber"))
 
+    cliente_nome = ""
+    cliente_id = request.form.get("cliente_id", type=int) if request.method == "POST" else request.args.get("cliente_id", type=int)
+    if cliente_id:
+        cliente = Pessoa.query.get(cliente_id)
+        if cliente:
+            cliente_nome = f"#{cliente.id} - {cliente.nome}"
+
     if request.method == "GET":
         form.origem.data = "AVULSO"
-        return render_template("financeiro/contas_receber_novo.html", form=form)
+        return render_template("financeiro/contas_receber_novo.html", form=form, cliente_nome=cliente_nome)
 
     try:
-        cliente_id = request.form.get("cliente_id", type=int)
         descricao = texto_upper(request.form.get("descricao"))
         valor = decimal_ou_zero(request.form.get("valor"))
         vencimento = request.form.get("vencimento")
 
         if not cliente_id or cliente_id == 0:
             flash("Selecione o cliente.", "warning")
-            return render_template("financeiro/contas_receber_novo.html", form=form)
+            return render_template("financeiro/contas_receber_novo.html", form=form, cliente_nome=cliente_nome)
 
         if not descricao:
             flash("Informe a descrição.", "warning")
-            return render_template("financeiro/contas_receber_novo.html", form=form)
+            return render_template("financeiro/contas_receber_novo.html", form=form, cliente_nome=cliente_nome)
 
         if valor <= 0:
             flash("O valor deve ser maior que zero.", "warning")
-            return render_template("financeiro/contas_receber_novo.html", form=form)
+            return render_template("financeiro/contas_receber_novo.html", form=form, cliente_nome=cliente_nome)
 
         if not vencimento:
             flash("Informe o vencimento.", "warning")
-            return render_template("financeiro/contas_receber_novo.html", form=form)
+            return render_template("financeiro/contas_receber_novo.html", form=form, cliente_nome=cliente_nome)
 
         conta = ContaReceber(
             cliente_id=cliente_id,
@@ -107,4 +113,4 @@ def contas_receber_novo():
         db.session.rollback()
         flash(f"Erro ao cadastrar conta a receber: {erro}", "danger")
 
-    return render_template("financeiro/contas_receber_novo.html", form=form)
+    return render_template("financeiro/contas_receber_novo.html", form=form, cliente_nome=cliente_nome)
