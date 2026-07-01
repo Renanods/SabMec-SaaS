@@ -194,7 +194,8 @@
                                                 <i class="bi bi-link-45deg"></i>
                                                 <span class="d-none d-md-inline ms-1">Vincular</span>
                                             </a>
-                                        {% else %}
+                                        {% endif %}
+                                        {% if status_compra == 'CONFIRMADA' %}
                                             <a href="{{ url_for('compras.compras_conferir_nota', id=compra.id) }}" class="btn btn-outline-light btn-sm px-3">
                                                 <i class="bi bi-eye"></i>
                                                 <span class="d-none d-md-inline ms-1">Ver</span>
